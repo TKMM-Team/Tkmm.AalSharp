@@ -1,40 +1,20 @@
+using AalSharp.Bars.IO.Data;
+using CommunityToolkit.HighPerformance.Buffers;
+using Entish;
+
 namespace AalSharp.Bars.IO;
 
-public sealed class BarsWriter
+public static class BarsWriter
 {
-    private readonly Stream _output;
-    private readonly byte[]? _serialized;
-    private readonly Dictionary<long, long> _pointers;
-    
-    public BarsWriter(BarsFile bars, Stream output)
+    public static void Write(BarsFile bars, Stream output, Endianness endianness = Endianness.Little)
     {
-        _output = output;
-        
-        if (!output.CanSeek) {
-            _serialized = BarsSerializer.Serialize(bars);
-            _pointers = null!;
-            return;
-        }
+        var size = AudioResourcesParts.GetResSize(bars);
+        using var rented = SpanOwner<byte>.Allocate(size.Total);
 
-        _pointers = [];
+        BarsSerializer.Serialize(bars, rented.Span, size, endianness);
+        output.Write(rented.Span);
     }
 
-    public void Write()
-    {
-        if (_serialized != null) {
-            _output.Write(_serialized, 0, _serialized.Length);
-            return;
-        }
-        
-        throw new NotImplementedException();
-    }
-
-    public Task WriteAsync(CancellationToken cancellationToken = default)
-    {
-        if (_serialized != null) {
-            return _output.WriteAsync(_serialized, 0, _serialized.Length, cancellationToken: cancellationToken);
-        }
-
-        throw new NotImplementedException();
-    }
+    public static Task WriteAsync(BarsFile bars, Stream output, Endianness endianness = Endianness.Little, CancellationToken cancellationToken = default)
+        => Task.Run(() => Write(bars, output, endianness), cancellationToken);
 }

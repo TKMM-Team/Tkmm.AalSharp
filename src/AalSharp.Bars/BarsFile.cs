@@ -17,15 +17,9 @@ public class BarsFile : Dictionary<uint, BarsEntry>
         return BarsSerializer.Serialize(this, endianness);
     }
 
-    public void Write(Stream output)
-    {
-        BarsWriter writer = new(this, output);
-        writer.Write();
-    }
+    public void Write(Stream output, Endianness endianness = Endianness.Little)
+        => BarsWriter.Write(this, output, endianness);
 
-    public Task WriteAsync(Stream output, CancellationToken cancellationToken = default)
-    {
-        BarsWriter writer = new(this, output);
-        return writer.WriteAsync(cancellationToken);
-    }
+    public Task WriteAsync(Stream output, Endianness endianness = Endianness.Little, CancellationToken cancellationToken = default)
+        => BarsWriter.WriteAsync(this, output, endianness, cancellationToken);
 }
