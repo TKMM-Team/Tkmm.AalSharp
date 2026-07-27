@@ -11,3 +11,6 @@ foreach (var (hash, entry) in bars) {
     File.WriteAllBytes(Path.Combine(output, $"0x{hash:x8}.amta"), AmtaSerializer.Serialize(entry.Metadata));
     File.WriteAllBytes(Path.Combine(output, $"0x{hash:x8}.b{entry.Hint?.ToLower() ?? "in"}"), entry.Asset);
 }
+
+var outputFile = args[0] + ".out.bars";
+File.WriteAllBytes(outputFile, bars.ToBinary());

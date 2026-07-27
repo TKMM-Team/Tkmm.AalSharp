@@ -7,13 +7,13 @@ using Entish.Attributes;
 namespace AalSharp.Bars.Data;
 
 [Swappable]
-public readonly unsafe partial struct AudioResources() : IMemoryResource<AudioResources>
+public unsafe partial struct AudioResources() : IMemoryResource<AudioResources>
 {
     public const uint Magic = 0x53524142;
     public const int Version = 0x0101;
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
-    public readonly AudioResourcesHeader Header = default;
+    public AudioResourcesHeader Header = default;
 
     public ref AudioResource this[int index] {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

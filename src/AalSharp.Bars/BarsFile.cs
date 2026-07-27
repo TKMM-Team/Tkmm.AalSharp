@@ -1,4 +1,5 @@
 using AalSharp.Bars.IO;
+using Entish;
 
 namespace AalSharp.Bars;
 
@@ -6,18 +7,14 @@ public class BarsFile : Dictionary<uint, BarsEntry>
 {
     public static unsafe BarsFile FromBinary(in ReadOnlySpan<byte> data)
     {
-        BarsFile bars = [];
-
         fixed (byte* ptr = data) {
-            BarsSerializer.DeserializeInto(ptr, bars);
+            return BarsSerializer.Deserialize(ptr);
         }
-
-        return bars;
     }
 
-    public byte[] ToBinary()
+    public byte[] ToBinary(Endianness endianness = Endianness.Little)
     {
-        return BarsSerializer.Serialize(this);
+        return BarsSerializer.Serialize(this, endianness);
     }
 
     public void Write(Stream output)

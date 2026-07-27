@@ -25,7 +25,90 @@ public sealed class AmtaSerializer
 
     public static unsafe void Serialize(BarsMetadata metadata, AudioMetadata* resAudioMetadata, AudioMetadataParts size, Endianness endianness = Endianness.Little)
     {
-        throw new NotImplementedException();
+        var strings = BuildStringTable(metadata, out var includeNullString);
+        
+        *resAudioMetadata = new AudioMetadata {
+            Header = new AudioMetadataHeader {
+                Endianness = endianness,
+                FileSize = size.Total
+            },
+            DataOffset = new Offset<AudioMetadataData>((uint)size.DataOffset),
+            MarkerOffset = new Offset<AudioMetadataMarker>((uint)size.MarkerOffset),
+            ExtOffset = new Offset<AudioMetadataExt>((uint)size.ExtOffset),
+            StringTableOffset = new Offset<AudioMetadataStringTable>((uint)size.StringTableOffset),
+        };
+
+        if (BitConverter.IsLittleEndian) {
+            EndianUtils.Swap((ushort*)resAudioMetadata + 2);
+        }
+
+        var data = resAudioMetadata->DataOffset.GetPointer(resAudioMetadata);
+        *data = new AudioMetadataData {
+            SectionSize = size.DataSize,
+            NameOffset = metadata.Data.Name is null ? 0 : strings[metadata.Data.Name],
+            SampleCount = metadata.Data.SampleCount,
+            Type = metadata.Data.Type,
+            WaveChannels = metadata.Data.WaveChannels,
+            UsedStreamTracks = metadata.Data.UsedStreamTracks,
+            Flags = metadata.Data.Flags,
+            Duration = metadata.Data.Duration,
+            SampleRate = metadata.Data.SampleRate,
+            LoopStartSample = metadata.Data.LoopStartSample,
+            LoopEndSample = metadata.Data.LoopEndSample,
+            Loudness = metadata.Data.Loudness,
+            AmplitudePeak = metadata.Data.AmplitudePeak
+        };
+
+        var streamTracks = data->GetStreamTracks();
+        for (int i = 0; i < streamTracks.Length; i++) {
+            streamTracks[i] = metadata.Data.StreamTracks[i];
+        }
+
+        var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
+        *marker = new AudioMetadataMarker {
+            SectionSize = size.MarkerSize,
+            NumEntries = metadata.Marker.Count
+        };
+
+        var markerEntries = (AudioMetadataMarkerEntry*)++marker;
+        foreach (var entry in metadata.Marker) {
+            *markerEntries = new AudioMetadataMarkerEntry {
+                Id = entry.Id,
+                NameOffset = entry.Name is null ? 0 : strings[entry.Name],
+                StartPos = entry.StartPos,
+                Length = entry.Length
+            };
+
+            markerEntries++;
+        }
+
+        var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
+        *ext = new AudioMetadataExt {
+            SectionSize = size.ExtSize,
+            NumEntries = metadata.Ext.Count
+        };
+        
+        var extEntries = (AudioMetadataExtEntry*)++ext;
+        foreach (var entry in metadata.Ext) {
+            extEntries->Unknown[0] = entry.Unknown1;
+            extEntries->Unknown[1] = entry.Unknown2;
+            extEntries++;
+        }
+        
+        var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
+        *stringTable = new AudioMetadataStringTable();
+
+        var stringTablePtr = (byte*)++stringTable;
+
+        if (includeNullString) {
+            WriteString(null, ref stringTablePtr);
+        }
+
+        foreach (var (str, _) in strings) {
+            WriteString(str, ref stringTablePtr);
+        }
+
+        SwapEndiannessFromSystem(resAudioMetadata);
     }
 
     public static unsafe BarsMetadata Deserialize(void* resAudioMetadata)
@@ -119,5 +202,85 @@ public sealed class AmtaSerializer
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
         AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)resAudioMetadata - (byte*)stringTable));
+    }
+
+    private static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
+    {
+        if (!EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
+            return;
+        }
+
+        AudioMetadataData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
+        
+        var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
+        var markerEntries = (AudioMetadataMarkerEntry*)++marker;
+
+        for (int i = 0; i < marker->NumEntries; i++) {
+            AudioMetadataMarkerEntry.Swap(++markerEntries);
+        }
+        
+        AudioMetadataMarker.Swap(marker);
+
+        var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
+        var extEntries = (AudioMetadataExtEntry*)++ext;
+
+        for (int i = 0; i < marker->NumEntries; i++) {
+            AudioMetadataExtEntry.Swap(++extEntries);
+        }
+        
+        AudioMetadataExt.Swap(ext);
+
+        var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
+        AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)resAudioMetadata - (byte*)stringTable));
+        
+        AudioMetadata.Swap(resAudioMetadata);
+    }
+
+    public static IEnumerable<string?> GetStrings(BarsMetadata metadata)
+    {
+        yield return metadata.Data.Name;
+
+        foreach (var marker in metadata.Marker) {
+            yield return marker.Name;
+        }
+    }
+
+    private static FrozenDictionary<string, int> BuildStringTable(BarsMetadata metadata, out bool includeNullString)
+    {
+        int rollingOffset = 0;
+        Dictionary<string, int> stringTable = new();
+
+        includeNullString = false;
+        
+        foreach (var str in GetStrings(metadata).Distinct().Order()) {
+            if (str is null) {
+                includeNullString = true;
+                continue;
+            }
+            
+            stringTable.Add(str, rollingOffset);
+            rollingOffset += Encoding.UTF8.GetByteCount(str) + 1;
+        }
+
+        return stringTable.ToFrozenDictionary();
+    }
+    
+    private static unsafe void WriteString(string? str, ref byte* ptr)
+    {
+        if (str is null) {
+            // u32(size), byte(null), byte(padding)
+            *(int*)ptr = 0x1;
+            ptr += sizeof(uint) + 2;
+            return;
+        }
+        
+        var len = Encoding.UTF8.GetByteCount(str);
+        *(int*)ptr = len + 1;
+        
+        ptr += sizeof(int);
+        
+        var span = new Span<byte>(ptr, len);
+        Encoding.UTF8.GetBytes(str, span);
+        ptr += len + 1;
     }
 }

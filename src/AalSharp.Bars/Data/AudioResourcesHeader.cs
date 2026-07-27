@@ -6,12 +6,10 @@ namespace AalSharp.Bars.Data;
 [Swappable]
 public partial struct AudioResourcesHeader()
 {
-    public const uint AudioResourcesMagic = 0x42415253;
-        
     [NeverSwap]
-    public readonly uint Magic = AudioResourcesMagic;
+    public readonly uint Magic = AudioResources.Magic;
     public uint FileSize;
     public Endianness Endianness;
-    public ushort Version;
+    public ushort Version = AudioResources.Version;
     public int AssetCount;
 }
