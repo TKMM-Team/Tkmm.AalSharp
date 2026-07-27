@@ -66,13 +66,10 @@ public sealed class BarsSerializer
             var metadata = resource.AmtaOffset.GetPointer(resAudioResources);
             var asset = resource.AssetOffset.GetPointer(resAudioResources);
 
-            var metadataSize = ResourceHelper.GetAalMetadataSize(metadata);
-            var assetSize = ResourceHelper.GetAalMetadataSize(asset);
-
             bars[hash] = new BarsEntry {
                 Hint = PrimitivesHelper.ToAscii(*(uint*)asset),
-                Metadata = new ReadOnlySpan<byte>(metadata, metadataSize).ToArray(),
-                Asset = new ReadOnlySpan<byte>(asset, assetSize).ToArray(),
+                Metadata = AmtaSerializer.Deserialize(metadata),
+                Asset = new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray(),
             };
         }
 
