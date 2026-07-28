@@ -107,9 +107,11 @@ public static class AmtaSerializer
         SwapEndiannessFromSystem(resAudioMetadata);
     }
 
-    public static unsafe BarsMetadata Deserialize(void* resAudioMetadata)
+    public static unsafe BarsMetadata Deserialize(void* resAudioMetadata, out Endianness endianness)
     {
         var audioMetadata = (AudioMetadata*)resAudioMetadata;
+        endianness = EndianUtils.GetTrueEndianness(audioMetadata->Header.Endianness);
+
         SwapEndianness(audioMetadata);
 
         return new BarsMetadata {

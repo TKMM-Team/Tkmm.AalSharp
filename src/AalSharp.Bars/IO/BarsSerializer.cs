@@ -70,11 +70,13 @@ public static class BarsSerializer
         SwapEndiannessFromSystem(resAudioResources);
     }
 
-    public static unsafe BarsFile Deserialize(void* resAudioResources)
+    public static unsafe BarsFile Deserialize(void* resAudioResources, out Endianness endianness)
     {
         BarsFile bars = [];
         
         var audioResources = (AudioResources*)resAudioResources;
+        endianness = EndianUtils.GetTrueEndianness(audioResources->Header.Endianness);
+        
         SwapEndianness(audioResources);
 
         var resCount = audioResources->Header.AssetCount;
@@ -88,7 +90,7 @@ public static class BarsSerializer
             var asset = resource.AssetOffset.GetPointer(resAudioResources);
 
             bars[hash] = new BarsEntry {
-                Metadata = AmtaSerializer.Deserialize(metadata),
+                Metadata = AmtaSerializer.Deserialize(metadata, out _),
                 Asset = new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray(),
             };
         }

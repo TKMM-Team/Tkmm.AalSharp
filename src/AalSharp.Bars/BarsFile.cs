@@ -6,10 +6,12 @@ namespace AalSharp.Bars;
 
 public class BarsFile : Dictionary<uint, BarsEntry>
 {
-    public static unsafe BarsFile FromBinary(in ReadOnlySpan<byte> data)
+    public static BarsFile FromBinary(in ReadOnlySpan<byte> data) => FromBinary(data, out _);
+    
+    public static unsafe BarsFile FromBinary(in ReadOnlySpan<byte> data, out Endianness endianness)
     {
         fixed (byte* ptr = data) {
-            return BarsSerializer.Deserialize(ptr);
+            return BarsSerializer.Deserialize(ptr, out endianness);
         }
     }
 
