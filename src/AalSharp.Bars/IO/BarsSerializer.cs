@@ -6,7 +6,7 @@ using Entish;
 
 namespace AalSharp.Bars.IO;
 
-public sealed class BarsSerializer
+public static class BarsSerializer
 {
     public const int AssetAlignment = 0x40;
     
@@ -36,11 +36,6 @@ public sealed class BarsSerializer
                 Endianness = endianness
             }
         };
-
-        // Swap expecting LE write
-        if (BitConverter.IsLittleEndian) {
-            EndianUtils.Swap((ushort*)resAudioResources + 4);
-        }
 
         var hashes = (uint*)(resAudioResources + 1);
         foreach (uint hash in bars.Keys.Order()) {
@@ -93,7 +88,6 @@ public sealed class BarsSerializer
             var asset = resource.AssetOffset.GetPointer(resAudioResources);
 
             bars[hash] = new BarsEntry {
-                Hint = PrimitivesHelper.ToAscii(*(uint*)asset),
                 Metadata = AmtaSerializer.Deserialize(metadata),
                 Asset = new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray(),
             };
@@ -115,12 +109,12 @@ public sealed class BarsSerializer
 
         for (int i = 0; i < resCount; i++) {
             EndianUtils.Swap((uint*)pos);
-            pos += sizeof(uint*);
+            pos += sizeof(uint);
         }
 
         for (int i = 0; i < resCount; i++) {
             AudioResource.Swap((AudioResource*)pos);
-            pos += sizeof(AudioResource*);
+            pos += sizeof(AudioResource);
         }
     }
 
@@ -129,7 +123,7 @@ public sealed class BarsSerializer
     /// </summary>
     private static unsafe void SwapEndiannessFromSystem(AudioResources* resAudioResources)
     {
-        if (!EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
+        if (EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
             return;
         }
         
@@ -138,12 +132,12 @@ public sealed class BarsSerializer
 
         for (int i = 0; i < resCount; i++) {
             EndianUtils.Swap((uint*)pos);
-            pos += sizeof(uint*);
+            pos += sizeof(uint);
         }
 
         for (int i = 0; i < resCount; i++) {
             AudioResource.Swap((AudioResource*)pos);
-            pos += sizeof(AudioResource*);
+            pos += sizeof(AudioResource);
         }
         
         AudioResourcesHeader.Swap(&resAudioResources->Header);

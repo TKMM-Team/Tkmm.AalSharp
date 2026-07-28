@@ -10,13 +10,14 @@ public struct AudioMetadataStringTable()
     
     public static unsafe void Swap(AudioMetadataStringTable* value, int size)
     {
-        var ptr = (byte*)++value;
+        var ptr = (byte*)value;
 
-        do {
-            var len = (uint*)ptr;
+        for (int i = sizeof(AudioMetadataStringTable); i < size; i++) {
+            var len = (int*)ptr;
             EndianUtils.Swap(len);
-
-            ptr += *len + 1;
-        } while (ptr - (byte*)value >= size);
+            
+            ptr += *len;
+            i += *len;
+        }
     }
 }

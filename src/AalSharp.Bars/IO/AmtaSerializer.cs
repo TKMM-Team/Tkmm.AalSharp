@@ -6,7 +6,7 @@ using Entish;
 
 namespace AalSharp.Bars.IO;
 
-public sealed class AmtaSerializer
+public static class AmtaSerializer
 {
     public static byte[] Serialize(BarsMetadata metadata, Endianness endianness = Endianness.Little)
     {
@@ -37,10 +37,6 @@ public sealed class AmtaSerializer
             ExtOffset = new Offset<AudioMetadataExt>((uint)size.ExtOffset),
             StringTableOffset = new Offset<AudioMetadataStringTable>((uint)size.StringTableOffset),
         };
-
-        if (BitConverter.IsLittleEndian) {
-            EndianUtils.Swap((ushort*)resAudioMetadata + 2);
-        }
 
         var data = resAudioMetadata->DataOffset.GetPointer(resAudioMetadata);
         *data = new AudioMetadataData {
@@ -117,7 +113,6 @@ public sealed class AmtaSerializer
         SwapEndianness(audioMetadata);
 
         return new BarsMetadata {
-            Version = audioMetadata->Header.Version,
             Data = Deserialize(audioMetadata->DataOffset.GetPointer(resAudioMetadata), audioMetadata),
             Marker = Deserialize(audioMetadata->MarkerOffset.GetPointer(resAudioMetadata), audioMetadata),
             Ext = Deserialize(audioMetadata->ExtOffset.GetPointer(resAudioMetadata)),
@@ -201,12 +196,12 @@ public sealed class AmtaSerializer
         }
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
-        AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)resAudioMetadata - (byte*)stringTable));
+        AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
     }
 
     private static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
     {
-        if (!EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
+        if (EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
             return;
         }
 
