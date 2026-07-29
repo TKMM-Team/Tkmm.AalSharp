@@ -126,6 +126,7 @@ public static class BarsSerializer
     private static unsafe void SwapEndiannessFromSystem(AudioResources* resAudioResources)
     {
         if (EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
+            EndianUtils.Swap((ushort*)resAudioResources + 4);
             return;
         }
         

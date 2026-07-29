@@ -204,6 +204,7 @@ public static class AmtaSerializer
     private static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
     {
         if (EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
+            EndianUtils.Swap((ushort*)resAudioMetadata + 2);
             return;
         }
 
