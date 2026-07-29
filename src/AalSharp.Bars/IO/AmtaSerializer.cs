@@ -186,7 +186,7 @@ public static class AmtaSerializer
         AudioMetadataMarker.Swap(marker);
 
         for (int i = 0; i < marker->NumEntries; i++) {
-            AudioMetadataMarkerEntry.Swap(++markerEntries);
+            AudioMetadataMarkerEntry.Swap(markerEntries++);
         }
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
@@ -194,7 +194,7 @@ public static class AmtaSerializer
         AudioMetadataExt.Swap(ext);
 
         for (int i = 0; i < ext->NumEntries; i++) {
-            AudioMetadataExtEntry.Swap(++extEntries);
+            AudioMetadataExtEntry.Swap(extEntries++);
         }
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
@@ -214,7 +214,7 @@ public static class AmtaSerializer
         var markerEntries = (AudioMetadataMarkerEntry*)(marker + 1);
 
         for (int i = 0; i < marker->NumEntries; i++) {
-            AudioMetadataMarkerEntry.Swap(++markerEntries);
+            AudioMetadataMarkerEntry.Swap(markerEntries++);
         }
 
         AudioMetadataMarker.Swap(marker);
@@ -222,8 +222,8 @@ public static class AmtaSerializer
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
         var extEntries = (AudioMetadataExtEntry*)(ext + 1);
 
-        for (int i = 0; i < marker->NumEntries; i++) {
-            AudioMetadataExtEntry.Swap(++extEntries);
+        for (int i = 0; i < ext->NumEntries; i++) {
+            AudioMetadataExtEntry.Swap(extEntries++);
         }
 
         AudioMetadataExt.Swap(ext);

@@ -21,9 +21,9 @@ public unsafe struct AudioMetadataParts
         var headerSize = sizeof(AudioMetadata);
         var dataSize = sizeof(AudioMetadataData);
         var markerOffset = headerSize + dataSize;
-        var markerSize = sizeof(AudioMetadataMarker) + metadata.Marker.Count * sizeof(AudioMetadataMarker);
+        var markerSize = sizeof(AudioMetadataMarker) + metadata.Marker.Count * sizeof(AudioMetadataMarkerEntry);
         var extOffset = markerOffset + markerSize;
-        var extSize = sizeof(AudioMetadataExt) + metadata.Marker.Count * sizeof(AudioMetadataExtEntry);
+        var extSize = sizeof(AudioMetadataExt) + metadata.Ext.Count * sizeof(AudioMetadataExtEntry);
         var stringTableOffset = extOffset + extSize;
         var stringTableSize = sizeof(AudioMetadataStringTable) + AmtaSerializer
             .GetStrings(metadata)
