@@ -250,14 +250,14 @@ public static class AmtaSerializer
 
         includeNullString = false;
 
-        foreach (var str in GetStrings(metadata).Distinct().Order()) {
+        foreach (var str in GetStrings(metadata).Distinct().Order(StringComparer.Ordinal)) {
             if (str is null) {
                 includeNullString = true;
                 continue;
             }
 
             stringTable.Add(str, rollingOffset);
-            rollingOffset += Encoding.UTF8.GetByteCount(str) + 1;
+            rollingOffset += Encoding.UTF8.GetByteCount(str) + 5;
         }
 
         return stringTable.ToFrozenDictionary();
