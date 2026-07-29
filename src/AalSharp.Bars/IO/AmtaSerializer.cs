@@ -40,7 +40,7 @@ public static class AmtaSerializer
 
         var data = resAudioMetadata->DataOffset.GetPointer(resAudioMetadata);
         *data = new AudioMetadataData {
-            SectionSize = size.DataSize,
+            SectionSize = size.DataSize - 0x8,
             NameOffset = metadata.Data.Name is null ? 0 : strings[metadata.Data.Name],
             SampleCount = metadata.Data.SampleCount,
             Type = metadata.Data.Type,
@@ -62,7 +62,7 @@ public static class AmtaSerializer
 
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
         *marker = new AudioMetadataMarker {
-            SectionSize = size.MarkerSize,
+            SectionSize = size.MarkerSize - 0x8,
             NumEntries = metadata.Marker.Count
         };
 
@@ -80,7 +80,7 @@ public static class AmtaSerializer
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
         *ext = new AudioMetadataExt {
-            SectionSize = size.ExtSize,
+            SectionSize = size.ExtSize - 0x8,
             NumEntries = metadata.Ext.Count
         };
         
