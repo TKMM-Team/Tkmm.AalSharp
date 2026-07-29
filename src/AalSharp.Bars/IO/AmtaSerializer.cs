@@ -135,7 +135,7 @@ public static class AmtaSerializer
             LoopStartSample = resData->LoopStartSample,
             LoopEndSample = resData->LoopEndSample,
             Loudness = resData->Loudness,
-            StreamTracks = resData->GetStreamTracks().ToArray(),
+            StreamTracks = [.. resData->GetStreamTracks()],
             AmplitudePeak = resData->AmplitudePeak
         };
     }
