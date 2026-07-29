@@ -32,10 +32,10 @@ public static class AmtaSerializer
                 Endianness = endianness,
                 FileSize = size.Total
             },
-            DataOffset = new Offset<AudioMetadataData>((uint)size.DataOffset),
-            MarkerOffset = new Offset<AudioMetadataMarker>((uint)size.MarkerOffset),
-            ExtOffset = new Offset<AudioMetadataExt>((uint)size.ExtOffset),
-            StringTableOffset = new Offset<AudioMetadataStringTable>((uint)size.StringTableOffset),
+            DataOffset = new Offset<AudioMetadataData>(size.DataOffset),
+            MarkerOffset = new Offset<AudioMetadataMarker>(size.MarkerOffset),
+            ExtOffset = new Offset<AudioMetadataExt>(size.ExtOffset),
+            StringTableOffset = new Offset<AudioMetadataStringTable>(size.StringTableOffset),
         };
 
         var data = resAudioMetadata->DataOffset.GetPointer(resAudioMetadata);

@@ -48,8 +48,8 @@ public static class BarsSerializer
             var asset = size.Assets[assetHash];
 
             *resources = new AudioResource {
-                AmtaOffset = new Offset<byte>((uint)size.MetadataOffset),
-                AssetOffset = new Offset<byte>((uint)asset.Offset),
+                AmtaOffset = new Offset<byte>(size.MetadataOffset),
+                AssetOffset = new Offset<byte>(asset.Offset),
             };
 
             var metadataSize = AudioMetadataParts.GetResSize(entry.Metadata);
@@ -92,7 +92,7 @@ public static class BarsSerializer
 
             bars[hash] = new BarsEntry {
                 Metadata = AmtaSerializer.Deserialize(metadata, out _),
-                Asset = new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray(),
+                Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray()
             };
         }
 

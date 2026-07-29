@@ -7,13 +7,13 @@ namespace AalSharp;
 [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 4)]
 public readonly unsafe struct Offset<T> : ISwappable<Offset<T>> where T : unmanaged
 {
-    public readonly uint Value;
+    public readonly int Value;
 
     public Offset()
     {
     }
 
-    public Offset(uint value)
+    public Offset(int value)
     {
         Value = value;
     }
@@ -30,6 +30,10 @@ public readonly unsafe struct Offset<T> : ISwappable<Offset<T>> where T : unmana
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T* GetPointer(void* relativeOffset)
     {
+        if (Value is -1) {
+            return null;
+        }
+        
         return (T*)((byte*)relativeOffset + Value);
     }
     
