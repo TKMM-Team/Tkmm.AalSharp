@@ -56,7 +56,7 @@ public unsafe partial struct AudioMetadata : IMemoryResource<AudioMetadata>
                 $"Invalid audio metadata data section magic: '{PrimitivesHelper.ToAscii(dataMagic)}'");
         }
 
-        if (metadata.MarkerOffset.Get(ref metadata).Magic is var markMagic and not AudioMetadataMarker.AmtaMarkMagic) {
+        if (metadata.MarkerOffset.Get(ref metadata).Magic is var markMagic and not AudioMetadataMarker.AmtaMarkerMagic) {
             yield return new InvalidDataException(
                 $"Invalid audio metadata mark section magic: '{PrimitivesHelper.ToAscii(markMagic)}'");
         }

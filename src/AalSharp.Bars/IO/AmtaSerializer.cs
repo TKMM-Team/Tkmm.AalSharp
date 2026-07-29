@@ -26,7 +26,7 @@ public static class AmtaSerializer
     public static unsafe void Serialize(BarsMetadata metadata, AudioMetadata* resAudioMetadata, AudioMetadataParts size, Endianness endianness = Endianness.Little)
     {
         var strings = BuildStringTable(metadata, out var includeNullString);
-        
+
         *resAudioMetadata = new AudioMetadata {
             Header = new AudioMetadataHeader {
                 Endianness = endianness,
@@ -83,14 +83,14 @@ public static class AmtaSerializer
             SectionSize = size.ExtSize - 0x8,
             NumEntries = metadata.Ext.Count
         };
-        
+
         var extEntries = (AudioMetadataExtEntry*)++ext;
         foreach (var entry in metadata.Ext) {
             extEntries->Unknown[0] = entry.Unknown1;
             extEntries->Unknown[1] = entry.Unknown2;
             extEntries++;
         }
-        
+
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
         *stringTable = new AudioMetadataStringTable();
 
@@ -182,7 +182,7 @@ public static class AmtaSerializer
         AudioMetadataData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
 
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
-        var markerEntries = (AudioMetadataMarkerEntry*)++marker;
+        var markerEntries = (AudioMetadataMarkerEntry*)(marker + 1);
         AudioMetadataMarker.Swap(marker);
 
         for (int i = 0; i < marker->NumEntries; i++) {
@@ -190,10 +190,10 @@ public static class AmtaSerializer
         }
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
-        var extEntries = (AudioMetadataExtEntry*)++ext;
+        var extEntries = (AudioMetadataExtEntry*)(ext + 1);
         AudioMetadataExt.Swap(ext);
 
-        for (int i = 0; i < marker->NumEntries; i++) {
+        for (int i = 0; i < ext->NumEntries; i++) {
             AudioMetadataExtEntry.Swap(++extEntries);
         }
 
@@ -209,28 +209,28 @@ public static class AmtaSerializer
         }
 
         AudioMetadataData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
-        
+
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
-        var markerEntries = (AudioMetadataMarkerEntry*)++marker;
+        var markerEntries = (AudioMetadataMarkerEntry*)(marker + 1);
 
         for (int i = 0; i < marker->NumEntries; i++) {
             AudioMetadataMarkerEntry.Swap(++markerEntries);
         }
-        
+
         AudioMetadataMarker.Swap(marker);
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
-        var extEntries = (AudioMetadataExtEntry*)++ext;
+        var extEntries = (AudioMetadataExtEntry*)(ext + 1);
 
         for (int i = 0; i < marker->NumEntries; i++) {
             AudioMetadataExtEntry.Swap(++extEntries);
         }
-        
+
         AudioMetadataExt.Swap(ext);
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
         AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)resAudioMetadata - (byte*)stringTable));
-        
+
         AudioMetadata.Swap(resAudioMetadata);
     }
 
@@ -249,20 +249,20 @@ public static class AmtaSerializer
         Dictionary<string, int> stringTable = new();
 
         includeNullString = false;
-        
+
         foreach (var str in GetStrings(metadata).Distinct().Order()) {
             if (str is null) {
                 includeNullString = true;
                 continue;
             }
-            
+
             stringTable.Add(str, rollingOffset);
             rollingOffset += Encoding.UTF8.GetByteCount(str) + 1;
         }
 
         return stringTable.ToFrozenDictionary();
     }
-    
+
     private static unsafe void WriteString(string? str, ref byte* ptr)
     {
         if (str is null) {
@@ -271,12 +271,12 @@ public static class AmtaSerializer
             ptr += sizeof(uint) + 2;
             return;
         }
-        
+
         var len = Encoding.UTF8.GetByteCount(str);
         *(int*)ptr = len + 1;
-        
+
         ptr += sizeof(int);
-        
+
         var span = new Span<byte>(ptr, len);
         Encoding.UTF8.GetBytes(str, span);
         ptr += len + 1;
