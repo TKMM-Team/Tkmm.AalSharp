@@ -8,7 +8,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Entish" Version="1.1.2" />
+    <PackageReference Include="Entish" Version="1.1.2"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageId>AalSharp</PackageId>
+    <Authors>ArchLeaders</Authors>
+    <Description>Base IO library for AAL file formats</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageLicenseUrl>License.md</PackageLicenseUrl>
+    <PackageIconUrl>Icon.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/EPD-Libraries/AalSharp</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Visible="false" Pack="true" PackagePath="\"
+          Include="..\..\License.md"/>
+    <None Visible="false" Pack="true" PackagePath="\"
+          Include="..\..\Readme.md"/>
+    <None Visible="false" Pack="true" PackagePath="\"
+          Include="..\..\resources\Icon.png"/>
   </ItemGroup>
 
 </Project>
