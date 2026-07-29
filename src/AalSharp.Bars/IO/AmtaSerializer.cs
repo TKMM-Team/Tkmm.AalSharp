@@ -149,7 +149,9 @@ public static class AmtaSerializer
             var entry = entries[i];
             marker.Add(new BarsMetadataMarkerEntry {
                 Id = entry.Id,
-                Name = metadata->GetString(entry.NameOffset).ToString()
+                Name = metadata->GetString(entry.NameOffset).ToString(),
+                StartPos = entry.StartPos,
+                Length = entry.Length
             });
         }
 
