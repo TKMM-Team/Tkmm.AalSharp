@@ -23,4 +23,19 @@ public struct AudioMetadataStringTable()
             i += stringSize;
         }
     }
+    
+    public static unsafe void SwapFromSystem(AudioMetadataStringTable* value, int size)
+    {
+        var ptr = (byte*)value + sizeof(AudioMetadataStringTable);
+
+        for (int i = sizeof(AudioMetadataStringTable); i + 0x4 < size;) {
+            var len = (int*)ptr;
+            var stringSize = 0x4 + *len;
+            
+            EndianUtils.Swap(len);
+
+            ptr += stringSize;
+            i += stringSize;
+        }
+    }
 }

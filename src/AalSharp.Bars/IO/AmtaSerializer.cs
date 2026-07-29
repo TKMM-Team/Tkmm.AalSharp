@@ -231,7 +231,7 @@ public static class AmtaSerializer
         AudioMetadataExt.Swap(ext);
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
-        AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)resAudioMetadata - (byte*)stringTable));
+        AudioMetadataStringTable.SwapFromSystem(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
 
         AudioMetadata.Swap(resAudioMetadata);
     }
