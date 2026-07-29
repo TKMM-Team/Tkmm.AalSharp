@@ -1,3 +1,4 @@
+using System.IO.Hashing;
 using System.Runtime.InteropServices;
 using AalSharp.Bars.Data;
 using AalSharp.Bars.IO.Data;
@@ -8,8 +9,6 @@ namespace AalSharp.Bars.IO;
 
 public static class BarsSerializer
 {
-    public const int AssetAlignment = 0x40;
-    
     public static byte[] Serialize(BarsFile bars, Endianness endianness = Endianness.Little)
     {
         var size = AudioResourcesParts.GetResSize(bars);
@@ -27,8 +26,6 @@ public static class BarsSerializer
     
     public static unsafe void Serialize(BarsFile bars, AudioResources* resAudioResources, AudioResourcesParts size, Endianness endianness = Endianness.Little)
     {
-        // TODO: Remove duplicate files
-        
         *resAudioResources = new AudioResources {
             Header = new AudioResourcesHeader {
                 FileSize = (uint)size.Total,
@@ -45,26 +42,29 @@ public static class BarsSerializer
 
         var resources = (AudioResource*)hashes;
         var metadata = (AudioMetadata*)((byte*)resAudioResources + size.MetadataOffset);
-        var assetData = (byte*)resAudioResources + size.AssetOffset;
 
         foreach (var (_, entry) in bars.OrderBy(static entry => entry.Key)) {
+            var assetHash = XxHash64.HashToUInt64(entry.Asset);
+            var asset = size.Assets[assetHash];
+            
             *resources = new AudioResource {
                 AmtaOffset = new Offset<byte>((uint)size.MetadataOffset),
-                AssetOffset = new Offset<byte>((uint)size.AssetOffset),
+                AssetOffset = new Offset<byte>((uint)asset.Offset),
             };
 
             var metadataSize = AudioMetadataParts.GetResSize(entry.Metadata);
             AmtaSerializer.Serialize(entry.Metadata, metadata, metadataSize, endianness);
-            
-            Marshal.Copy(entry.Asset, 0, (IntPtr)assetData, entry.Asset.Length);
-            
+
             resources++;
             metadata = (AudioMetadata*)((byte*)metadata + metadataSize.Total);
             size.MetadataOffset += metadataSize.Total;
 
-            int assetBlockSize = entry.Asset.Length.AlignUp(AssetAlignment); 
-            assetData += assetBlockSize;
-            size.AssetOffset += assetBlockSize;
+            if (asset.Offset != size.AssetOffset) {
+                continue;
+            }
+
+            Marshal.Copy(entry.Asset, 0, (IntPtr)resAudioResources + asset.Offset, entry.Asset.Length);
+            size.AssetOffset += entry.Asset.Length.AlignUp(asset.Alignment);
         }
 
         SwapEndiannessFromSystem(resAudioResources);
