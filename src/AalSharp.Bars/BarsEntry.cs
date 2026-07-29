@@ -11,12 +11,12 @@ public sealed class BarsEntry
 
     public required BarsMetadata Metadata { get; set; }
 
-    public required byte[] Asset { get; set; }
+    public required byte[]? Asset { get; set; }
     
     public int GetAlignment()
     {
-        if (Asset.Length <= 8) {
-            throw new InvalidDataException("Invalid sound asset file.");
+        if (Asset is null || Asset.Length <= 8) {
+            return 0x1;
         }
 
         var alignment = Unsafe.As<byte, short>(ref Asset[0x6]);

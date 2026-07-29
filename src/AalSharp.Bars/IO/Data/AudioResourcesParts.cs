@@ -6,7 +6,7 @@ namespace AalSharp.Bars.IO.Data;
 
 public unsafe struct AudioResourcesParts
 {
-    public Dictionary<ulong, (int Offset, int Alignment, byte[] Data)> Assets;
+    public Dictionary<ulong, (int Offset, int Alignment, byte[]? Data)> Assets;
     public int HeaderSize;
     public int HashesOffset;
     public int HashesSize;
@@ -20,7 +20,7 @@ public unsafe struct AudioResourcesParts
 
     public static AudioResourcesParts GetResSize(BarsFile bars)
     {
-        Dictionary<ulong, (int Offset, int Alignment, byte[] Data)> assets = [];
+        Dictionary<ulong, (int Offset, int Alignment, byte[]? Data)> assets = [];
         
         var headerSize = sizeof(AudioResourcesHeader);
         var hashesSize = sizeof(uint) * bars.Count;
@@ -40,8 +40,8 @@ public unsafe struct AudioResourcesParts
             var alignment = entry.GetAlignment();
             assetOffset = assetOffset.AlignUp(alignment);
             
-            assets.Add(assetHash, (assetOffset, alignment, Data: entry.Asset));
-            assetOffset += entry.Asset.Length;
+            assets.Add(assetHash, (Offset: entry.Asset is null ? -1 : assetOffset, alignment, Data: entry.Asset));
+            assetOffset += entry.Asset?.Length ?? 0;
         }
         
         var assetSize = assetOffset - firstAssetOffset;

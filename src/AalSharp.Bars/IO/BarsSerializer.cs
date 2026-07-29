@@ -60,12 +60,12 @@ public static class BarsSerializer
             size.MetadataOffset += metadataSize.Total;
 
             size.AssetOffset = size.AssetOffset.AlignUp(asset.Alignment);
-            if (asset.Offset != size.AssetOffset) {
+            if (asset.Data is null || asset.Offset != size.AssetOffset) {
                 continue;
             }
 
-            Marshal.Copy(entry.Asset, 0, (IntPtr)resAudioResources + asset.Offset, entry.Asset.Length);
-            size.AssetOffset += entry.Asset.Length;
+            Marshal.Copy(asset.Data, 0, (IntPtr)resAudioResources + asset.Offset, asset.Data.Length);
+            size.AssetOffset += asset.Data.Length;
         }
 
         SwapEndiannessFromSystem(resAudioResources);
