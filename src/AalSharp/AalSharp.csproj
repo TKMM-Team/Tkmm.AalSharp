@@ -15,9 +15,8 @@
     <PackageId>AalSharp</PackageId>
     <Authors>ArchLeaders</Authors>
     <Description>Base IO library for AAL file formats</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
-    <PackageLicenseUrl>License.md</PackageLicenseUrl>
+    <PackageLicenseFile>License.md</PackageLicenseFile>
     <PackageIconUrl>Icon.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/EPD-Libraries/AalSharp</RepositoryUrl>
   </PropertyGroup>

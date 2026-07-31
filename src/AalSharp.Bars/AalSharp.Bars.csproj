@@ -20,9 +20,8 @@
     <PackageId>AalSharp.Bars</PackageId>
     <Authors>ArchLeaders</Authors>
     <Description>IO library for the v101 BARS (Binary Audio Resources) and v4 AMTA (Audio Metadata) AAL file formats</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
-    <PackageLicenseUrl>License.md</PackageLicenseUrl>
+    <PackageLicenseFile>License.md</PackageLicenseFile>
     <PackageIconUrl>Icon.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/EPD-Libraries/AalSharp</RepositoryUrl>
   </PropertyGroup>
