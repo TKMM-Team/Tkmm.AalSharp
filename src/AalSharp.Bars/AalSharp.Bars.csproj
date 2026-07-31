@@ -22,7 +22,7 @@
     <Description>IO library for the v101 BARS (Binary Audio Resources) and v4 AMTA (Audio Metadata) AAL file formats</Description>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <PackageLicenseFile>License.md</PackageLicenseFile>
-    <PackageIconUrl>Icon.png</PackageIconUrl>
+    <PackageIcon>Icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/EPD-Libraries/AalSharp</RepositoryUrl>
   </PropertyGroup>
 

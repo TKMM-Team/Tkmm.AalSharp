@@ -17,7 +17,7 @@
     <Description>Base IO library for AAL file formats</Description>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <PackageLicenseFile>License.md</PackageLicenseFile>
-    <PackageIconUrl>Icon.png</PackageIconUrl>
+    <PackageIcon>Icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/EPD-Libraries/AalSharp</RepositoryUrl>
   </PropertyGroup>
 
