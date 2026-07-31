@@ -44,7 +44,15 @@ byte[] data = bars.ToBinary(Endianness.Little, endianness: Entish.Endianness.Lit
 
 ## Benchmarks
 
-> TODO
+### Benchmarks for `BotW/Sound/Resource/M_SceneStatic.bars` (BotW 1.6.0 | **18.5 MB**)
+
+| Method           |     Mean |     Error |    StdDev |      Gen0 |     Gen1 |     Gen2 | Allocated |
+|----------------- |---------:|----------:|----------:|----------:|---------:|---------:|----------:|
+| Read             | 4.245 ms | 0.1167 ms | 0.3329 ms | 1003.9063 | 941.4063 |  78.1250 |  18.34 MB |
+| Write            | 8.929 ms | 0.1780 ms | 0.4161 ms |  234.3750 | 156.2500 | 156.2500 |  19.38 MB |
+| ToBinary         | 6.638 ms | 0.1308 ms | 0.2358 ms |  359.3750 | 273.4375 | 273.4375 |  19.38 MB |
+| SerializeNoAlloc | 8.648 ms | 0.1714 ms | 0.3001 ms |   78.1250 |        - |        - |   1.35 MB |
+
 
 ### Install
 

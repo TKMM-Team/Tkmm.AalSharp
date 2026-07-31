@@ -1,10 +1,11 @@
 <Solution>
   <Folder Name="/Samples/">
-    <Project Path="samples/AalSharp.Console/AalSharp.Console.csproj"/>
+    <Project Path="samples/AalSharp.Benchmarks/AalSharp.Benchmarks.csproj" />
+    <Project Path="samples/AalSharp.Console/AalSharp.Console.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests/AalSharp.Bars.Tests/AalSharp.Bars.Tests.csproj"/>
+    <Project Path="tests/AalSharp.Bars.Tests/AalSharp.Bars.Tests.csproj" />
   </Folder>
-  <Project Path="src/AalSharp.Bars/AalSharp.Bars.csproj"/>
-  <Project Path="src/AalSharp/AalSharp.csproj"/>
+  <Project Path="src/AalSharp.Bars/AalSharp.Bars.csproj" />
+  <Project Path="src/AalSharp/AalSharp.csproj" />
 </Solution>
