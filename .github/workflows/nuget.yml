@@ -30,12 +30,12 @@ jobs:
       - name: Restore
         shell: bash
         run: |-
-          dotnet restore ${{ matrix.config.name }}/${{ matrix.config.name }}.csproj
+          dotnet restore src/${{ matrix.config.name }}/${{ matrix.config.name }}.csproj
       
       - name: Build
         shell: bash
         run: |-
-          dotnet build ${{ matrix.config.name }}/${{ matrix.config.name }}.csproj \
+          dotnet build src/${{ matrix.config.name }}/${{ matrix.config.name }}.csproj \
           --no-restore                                                            \
           -c Release                                                              \
       
@@ -46,7 +46,7 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          dotnet pack ${{ matrix.config.name }}/${{ matrix.config.name }}.csproj \
+          dotnet pack src/${{ matrix.config.name }}/${{ matrix.config.name }}.csproj \
           --no-restore                                                           \
           -c Release                                                             \
           -o ./build-output/                                                     \
