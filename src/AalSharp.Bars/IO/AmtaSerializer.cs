@@ -121,7 +121,7 @@ public static class AmtaSerializer
         };
     }
 
-    private static unsafe BarsMetadataData Deserialize(AudioMetadataData* resData, AudioMetadata* metadata)
+    public static unsafe BarsMetadataData Deserialize(AudioMetadataData* resData, AudioMetadata* metadata)
     {
         return new BarsMetadataData {
             Name = metadata->Name.ToString(),
@@ -140,7 +140,7 @@ public static class AmtaSerializer
         };
     }
 
-    private static unsafe BarsMetadataMarker Deserialize(AudioMetadataMarker* resMarker, AudioMetadata* metadata)
+    public static unsafe BarsMetadataMarker Deserialize(AudioMetadataMarker* resMarker, AudioMetadata* metadata)
     {
         var marker = new BarsMetadataMarker(resMarker->NumEntries);
         var entries = (AudioMetadataMarkerEntry*)(resMarker + 1);
@@ -158,7 +158,7 @@ public static class AmtaSerializer
         return marker;
     }
 
-    private static unsafe BarsMetadataExt Deserialize(AudioMetadataExt* resExt)
+    public static unsafe BarsMetadataExt Deserialize(AudioMetadataExt* resExt)
     {
         var ext = new BarsMetadataExt(resExt->NumEntries);
         var entries = (AudioMetadataExtEntry*)(resExt + 1);
@@ -174,7 +174,7 @@ public static class AmtaSerializer
         return ext;
     }
 
-    private static unsafe void SwapEndianness(AudioMetadata* resAudioMetadata)
+    public static unsafe void SwapEndianness(AudioMetadata* resAudioMetadata)
     {
         if (!EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
             return;
@@ -203,7 +203,7 @@ public static class AmtaSerializer
         AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
     }
 
-    private static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
+    public static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
     {
         if (EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
             EndianUtils.Swap((ushort*)resAudioMetadata + 2);
@@ -245,7 +245,7 @@ public static class AmtaSerializer
         }
     }
 
-    private static FrozenDictionary<string, int> BuildStringTable(BarsMetadata metadata, out bool includeNullString)
+    public static FrozenDictionary<string, int> BuildStringTable(BarsMetadata metadata, out bool includeNullString)
     {
         int rollingOffset = 0;
         Dictionary<string, int> stringTable = new();
@@ -265,7 +265,7 @@ public static class AmtaSerializer
         return stringTable.ToFrozenDictionary();
     }
 
-    private static unsafe void WriteString(string? str, ref byte* ptr)
+    public static unsafe void WriteString(string? str, ref byte* ptr)
     {
         if (str is null) {
             // u32(size), byte(null), byte(padding)

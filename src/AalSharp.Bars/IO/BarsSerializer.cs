@@ -99,7 +99,7 @@ public static class BarsSerializer
         return bars;
     }
 
-    private static unsafe void SwapEndianness(AudioResources* resAudioResources)
+    public static unsafe void SwapEndianness(AudioResources* resAudioResources)
     {
         if (!EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
             return;
@@ -124,7 +124,7 @@ public static class BarsSerializer
     /// <summary>
     /// Swap the endianness from a system-matching endianness (backwards for serialization)
     /// </summary>
-    private static unsafe void SwapEndiannessFromSystem(AudioResources* resAudioResources)
+    public static unsafe void SwapEndiannessFromSystem(AudioResources* resAudioResources)
     {
         if (EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
             EndianUtils.Swap((ushort*)resAudioResources + 4);
