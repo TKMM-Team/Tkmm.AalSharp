@@ -1,21 +1,25 @@
+using AalSharp.Amta.IO;
 using AalSharp.Bars.IO;
 using AalSharp.Hashing;
 using Entish;
 
 namespace AalSharp.Bars;
 
-public class BarsFile : Dictionary<uint, BarsEntry>
+public class AudioResource : Dictionary<uint, AudioResourceAsset>
 {
-    public static BarsFile FromBinary(in ReadOnlySpan<byte> data) => FromBinary(data, out _);
-    
-    public static unsafe BarsFile FromBinary(in ReadOnlySpan<byte> data, out Endianness endianness)
+    public static AudioResource FromBinary<TAmtaSerializer>(in ReadOnlySpan<byte> data)
+        where TAmtaSerializer : IAmtaSerializer
+        => FromBinary<TAmtaSerializer>(data, out _);
+
+    public static unsafe AudioResource FromBinary<TAmtaSerializer>(in ReadOnlySpan<byte> data, out Endianness endianness)
+        where TAmtaSerializer : IAmtaSerializer
     {
         fixed (byte* ptr = data) {
-            return BarsSerializer.Deserialize(ptr, out endianness);
+            return BarsSerializer.Deserialize<TAmtaSerializer>(ptr, out endianness);
         }
     }
 
-    public BarsEntry this[string key] {
+    public AudioResourceAsset this[string key] {
         get => this[Crc32.HashToUInt(key)];
         set => this[Crc32.HashToUInt(key)] = value;
     }

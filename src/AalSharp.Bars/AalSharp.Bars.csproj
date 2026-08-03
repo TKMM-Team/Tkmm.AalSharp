@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\AalSharp.Amta\AalSharp.Amta.csproj" />
     <ProjectReference Include="..\AalSharp\AalSharp.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
 using Entish.Attributes;
 
-namespace AalSharp.Bars.Data;
+namespace AalSharp.Amta.Data;
 
 public enum AudioMetadataDataType : byte
 {
@@ -9,7 +9,7 @@ public enum AudioMetadataDataType : byte
 };
 
 [Swappable]
-public unsafe partial struct AudioMetadataData()
+public unsafe partial struct ResData()
 {
     public const uint AmtaDataMagic = 0x41544144;
 
@@ -30,10 +30,10 @@ public unsafe partial struct AudioMetadataData()
     private fixed uint _streamTracks[16]; // (uint, float) x8 
     public float AmplitudePeak;
 
-    public Span<AudioMetadataStreamTrack> GetStreamTracks()
+    public Span<ResStreamTrack> GetStreamTracks()
     {
         fixed (void* ptr = _streamTracks) {
-            return new Span<AudioMetadataStreamTrack>(ptr, 8);
+            return new Span<ResStreamTrack>(ptr, 8);
         }
     }
 }

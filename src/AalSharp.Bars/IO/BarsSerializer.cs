@@ -1,5 +1,6 @@
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
+using AalSharp.Amta.IO;
 using AalSharp.Bars.Data;
 using AalSharp.Bars.IO.Data;
 using AalSharp.Helpers;
@@ -9,54 +10,52 @@ namespace AalSharp.Bars.IO;
 
 public static class BarsSerializer
 {
-    public static byte[] Serialize(BarsFile bars, Endianness endianness = Endianness.Little)
+    public static byte[] Serialize(AudioResource bars, Endianness endianness = Endianness.Little)
     {
-        var size = AudioResourcesParts.GetResSize(bars);
+        var size = new ResAudioResourceSize(bars);
         var buffer = new byte[size.Total];
         Serialize(bars, buffer, size, endianness);
         return buffer;
     }
 
-    public static unsafe void Serialize(BarsFile bars, Span<byte> span, AudioResourcesParts size, Endianness endianness = Endianness.Little)
+    public static unsafe void Serialize(AudioResource bars, Span<byte> span, ResAudioResourceSize size, Endianness endianness = Endianness.Little)
     {
         fixed (byte* ptr = span) {
-            Serialize(bars, (AudioResources*)ptr, size, endianness);
+            Serialize(bars, (ResAudioResource*)ptr, size, endianness);
         }
     }
 
-    public static unsafe void Serialize(BarsFile bars, AudioResources* resAudioResources, AudioResourcesParts size, Endianness endianness = Endianness.Little)
+    public static unsafe void Serialize(AudioResource bars, ResAudioResource* resAudioResource, ResAudioResourceSize size, Endianness endianness = Endianness.Little)
     {
-        *resAudioResources = new AudioResources {
-            Header = new AudioResourcesHeader {
-                FileSize = (uint)size.Total,
-                AssetCount = bars.Count,
-                Endianness = endianness
-            }
+        *resAudioResource = new ResAudioResource {
+            FileSize = (uint)size.Total,
+            AssetCount = bars.Count,
+            Endianness = endianness
         };
 
-        var hashes = (uint*)(resAudioResources + 1);
+        var hashes = (uint*)(resAudioResource + 1);
         foreach (uint hash in bars.Keys.Order()) {
             *hashes = hash;
             hashes++;
         }
 
-        var resources = (AudioResource*)hashes;
-        var metadata = (AudioMetadata*)((byte*)resAudioResources + size.MetadataOffset);
+        var resources = (ResAssetOffset*)hashes;
+        var metadata = (byte*)resAudioResource + size.MetadataOffset;
 
         foreach (var (_, entry) in bars.OrderBy(static entry => entry.Key)) {
             var assetHash = XxHash64.HashToUInt64(entry.Asset);
             var asset = size.Assets[assetHash];
 
-            *resources = new AudioResource {
+            *resources = new ResAssetOffset {
                 AmtaOffset = new Offset<byte>(size.MetadataOffset),
                 AssetOffset = new Offset<byte>(asset.Offset),
             };
 
-            var metadataSize = AudioMetadataParts.GetResSize(entry.Metadata);
-            AmtaSerializer.Serialize(entry.Metadata, metadata, metadataSize, endianness);
+            var metadataSize = entry.Metadata.GetResSize();
+            entry.Metadata.GetSerializer().Serialize(entry.Metadata, metadata, metadataSize, endianness);
 
             resources++;
-            metadata = (AudioMetadata*)((byte*)metadata + metadataSize.Total);
+            metadata += metadataSize.Total;
             size.MetadataOffset += metadataSize.Total;
 
             size.AssetOffset = size.AssetOffset.AlignUp(asset.Alignment);
@@ -64,34 +63,35 @@ public static class BarsSerializer
                 continue;
             }
 
-            Marshal.Copy(asset.Data, 0, (IntPtr)resAudioResources + asset.Offset, asset.Data.Length);
+            Marshal.Copy(asset.Data, 0, (IntPtr)resAudioResource + asset.Offset, asset.Data.Length);
             size.AssetOffset += asset.Data.Length;
         }
 
-        SwapEndiannessFromSystem(resAudioResources);
+        SwapEndiannessFromSystem(resAudioResource);
     }
 
-    public static unsafe BarsFile Deserialize(void* resAudioResources, out Endianness endianness)
+    public static unsafe AudioResource Deserialize<TAmtaSerializer>(void* resAudioResource, out Endianness endianness)
+        where TAmtaSerializer : IAmtaSerializer
     {
-        BarsFile bars = [];
+        AudioResource bars = [];
 
-        var audioResources = (AudioResources*)resAudioResources;
-        endianness = EndianUtils.GetTrueEndianness(audioResources->Header.Endianness);
+        var audioResources = (ResAudioResource*)resAudioResource;
+        endianness = EndianUtils.GetTrueEndianness(audioResources->Endianness);
 
         SwapEndianness(audioResources);
 
-        var resCount = audioResources->Header.AssetCount;
-        var hashes = (uint*)((byte*)audioResources + sizeof(AudioResourcesHeader));
-        var resources = (AudioResource*)((byte*)hashes + sizeof(uint) * resCount);
+        var resCount = audioResources->AssetCount;
+        var hashes = (uint*)((byte*)audioResources + sizeof(ResAudioResource));
+        var resources = (ResAssetOffset*)((byte*)hashes + sizeof(uint) * resCount);
 
         for (int i = 0; i < resCount; i++) {
             var hash = hashes[i];
             var resource = resources[i];
-            var metadata = resource.AmtaOffset.GetPointer(resAudioResources);
-            var asset = resource.AssetOffset.GetPointer(resAudioResources);
+            var metadata = resource.AmtaOffset.GetPointer(resAudioResource);
+            var asset = resource.AssetOffset.GetPointer(resAudioResource);
 
-            bars[hash] = new BarsEntry {
-                Metadata = AmtaSerializer.Deserialize(metadata, out _),
+            bars[hash] = new AudioResourceAsset {
+                Metadata = TAmtaSerializer.Deserialize(metadata, out _),
                 Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray()
             };
         }
@@ -99,16 +99,16 @@ public static class BarsSerializer
         return bars;
     }
 
-    public static unsafe void SwapEndianness(AudioResources* resAudioResources)
+    public static unsafe void SwapEndianness(ResAudioResource* resAudioResource)
     {
-        if (!EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
+        if (!EndianUtils.ShouldSwap(resAudioResource->Endianness)) {
             return;
         }
 
-        AudioResourcesHeader.Swap(&resAudioResources->Header);
+        ResAudioResource.Swap(resAudioResource);
 
-        var resCount = resAudioResources->Header.AssetCount;
-        byte* pos = (byte*)resAudioResources + sizeof(AudioResourcesHeader);
+        var resCount = resAudioResource->AssetCount;
+        byte* pos = (byte*)resAudioResource + sizeof(ResAudioResource);
 
         for (int i = 0; i < resCount; i++) {
             EndianUtils.Swap((uint*)pos);
@@ -116,23 +116,23 @@ public static class BarsSerializer
         }
 
         for (int i = 0; i < resCount; i++) {
-            AudioResource.Swap((AudioResource*)pos);
-            pos += sizeof(AudioResource);
+            ResAssetOffset.Swap((ResAssetOffset*)pos);
+            pos += sizeof(ResAssetOffset);
         }
     }
 
     /// <summary>
     /// Swap the endianness from a system-matching endianness (backwards for serialization)
     /// </summary>
-    public static unsafe void SwapEndiannessFromSystem(AudioResources* resAudioResources)
+    public static unsafe void SwapEndiannessFromSystem(ResAudioResource* resAudioResource)
     {
-        if (EndianUtils.ShouldSwap(resAudioResources->Header.Endianness)) {
-            EndianUtils.Swap((ushort*)resAudioResources + 4);
+        if (EndianUtils.ShouldSwap(resAudioResource->Endianness)) {
+            EndianUtils.Swap((ushort*)resAudioResource + 4);
             return;
         }
 
-        var resCount = resAudioResources->Header.AssetCount;
-        byte* pos = (byte*)resAudioResources + sizeof(AudioResourcesHeader);
+        var resCount = resAudioResource->AssetCount;
+        byte* pos = (byte*)resAudioResource + sizeof(ResAudioResource);
 
         for (int i = 0; i < resCount; i++) {
             EndianUtils.Swap((uint*)pos);
@@ -140,10 +140,10 @@ public static class BarsSerializer
         }
 
         for (int i = 0; i < resCount; i++) {
-            AudioResource.Swap((AudioResource*)pos);
-            pos += sizeof(AudioResource);
+            ResAssetOffset.Swap((ResAssetOffset*)pos);
+            pos += sizeof(ResAssetOffset);
         }
 
-        AudioResourcesHeader.Swap(&resAudioResources->Header);
+        ResAudioResource.Swap(resAudioResource);
     }
 }

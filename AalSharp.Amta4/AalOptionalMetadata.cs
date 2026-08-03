@@ -1,8 +1,8 @@
-using AalSharp.Bars.Data;
+using AalSharp.Amta.Data;
 
-namespace AalSharp.Bars;
+namespace AalSharp.Amta;
 
-public sealed class BarsMetadataData
+public sealed class AalOptionalMetadata
 {
     public string? Name { get; set; }
 
@@ -26,7 +26,7 @@ public sealed class BarsMetadataData
 
     public float Loudness { get; set; }
 
-    public AudioMetadataStreamTrack[] StreamTracks { get; set; } = new AudioMetadataStreamTrack[8];
+    public ResStreamTrack[] StreamTracks { get; set; } = new ResStreamTrack[8];
 
     public float AmplitudePeak { get; set; }
 }

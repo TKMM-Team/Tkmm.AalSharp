@@ -1,3 +1,4 @@
+using AalSharp.Amta.IO;
 using AalSharp.Bars;
 using AalSharp.Bars.IO;
 using AalSharp.Bars.IO.Data;
@@ -11,17 +12,17 @@ public class BarsBenchmarks
     private readonly byte[] _buffer = File.ReadAllBytes("path/to/file.bars");
     private readonly byte[] _bufferOut = new byte[0x12075A0];
     
-    private readonly BarsFile _file;
+    private readonly AudioResource _file;
 
     public BarsBenchmarks()
     {
-        _file = BarsFile.FromBinary(_buffer);
+        _file = AudioResource.FromBinary<AmtaSerializer>(_buffer);
     }
 
     [Benchmark]
     public void Read()
     {
-        _ = BarsFile.FromBinary(_buffer);
+        _ = AudioResource.FromBinary<AmtaSerializer>(_buffer);
     }
 
     [Benchmark]
@@ -40,7 +41,7 @@ public class BarsBenchmarks
     [Benchmark]
     public void SerializeNoAlloc()
     {
-        var size = AudioResourcesParts.GetResSize(_file);
+        var size = new ResAudioResourceSize(_file);
         BarsSerializer.Serialize(_file, _bufferOut, size);
     }
 }

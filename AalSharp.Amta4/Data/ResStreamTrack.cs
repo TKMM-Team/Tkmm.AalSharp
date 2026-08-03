@@ -1,9 +1,9 @@
 using Entish.Attributes;
 
-namespace AalSharp.Bars.Data;
+namespace AalSharp.Amta.Data;
 
 [Swappable]
-public partial struct AudioMetadataStreamTrack
+public partial struct ResStreamTrack
 {
     public uint ChannelCount;
     public float Volume;

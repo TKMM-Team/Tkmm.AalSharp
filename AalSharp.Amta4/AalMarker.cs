@@ -1,6 +1,6 @@
-namespace AalSharp.Bars;
+namespace AalSharp.Amta;
 
-public sealed class BarsMetadataMarkerEntry
+public sealed class AalMarker
 {
     public uint Id { get; set; }
 

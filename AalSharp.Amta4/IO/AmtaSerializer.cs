@@ -1,45 +1,48 @@
 using System.Collections.Frozen;
 using System.Text;
-using AalSharp.Bars.Data;
-using AalSharp.Bars.IO.Data;
+using AalSharp.Amta.Data;
 using Entish;
 
-namespace AalSharp.Bars.IO;
+namespace AalSharp.Amta.IO;
 
-public static class AmtaSerializer
+public unsafe class AmtaSerializer : IAmtaSerializer
 {
-    public static byte[] Serialize(BarsMetadata metadata, Endianness endianness = Endianness.Little)
+    public void Serialize(IAudioMetadata metadata, Span<byte> span, IResourceSize size, Endianness endianness = Endianness.Little)
+        => Serialize((AalAudioMetadata)metadata, span, (ResAudioMetadataSize)size, endianness);
+    
+    public void Serialize(IAudioMetadata metadata, void* resAudioMetadata, IResourceSize size, Endianness endianness = Endianness.Little)
+        => Serialize((AalAudioMetadata)metadata, (ResAudioMetadata*)resAudioMetadata, (ResAudioMetadataSize)size, endianness);
+
+    public static byte[] Serialize(AalAudioMetadata metadata, Endianness endianness = Endianness.Little)
     {
-        var size = AudioMetadataParts.GetResSize(metadata);
+        var size = new ResAudioMetadataSize(metadata);
         var buffer = new byte[size.Total];
         Serialize(metadata, buffer, size, endianness);
         return buffer;
     }
 
-    public static unsafe void Serialize(BarsMetadata metadata, Span<byte> span, AudioMetadataParts size, Endianness endianness = Endianness.Little)
+    public static unsafe void Serialize(AalAudioMetadata metadata, Span<byte> span, ResAudioMetadataSize size, Endianness endianness = Endianness.Little)
     {
         fixed (byte* ptr = span) {
-            Serialize(metadata, (AudioMetadata*)ptr, size, endianness);
+            Serialize(metadata, (ResAudioMetadata*)ptr, size, endianness);
         }
     }
 
-    public static unsafe void Serialize(BarsMetadata metadata, AudioMetadata* resAudioMetadata, AudioMetadataParts size, Endianness endianness = Endianness.Little)
+    public static unsafe void Serialize(AalAudioMetadata metadata, ResAudioMetadata* resAudioMetadata, ResAudioMetadataSize size, Endianness endianness = Endianness.Little)
     {
         var strings = BuildStringTable(metadata, out var includeNullString);
 
-        *resAudioMetadata = new AudioMetadata {
-            Header = new AudioMetadataHeader {
-                Endianness = endianness,
-                FileSize = size.Total
-            },
-            DataOffset = new Offset<AudioMetadataData>(size.DataOffset),
-            MarkerOffset = new Offset<AudioMetadataMarker>(size.MarkerOffset),
-            ExtOffset = new Offset<AudioMetadataExt>(size.ExtOffset),
-            StringTableOffset = new Offset<AudioMetadataStringTable>(size.StringTableOffset),
+        *resAudioMetadata = new ResAudioMetadata {
+            Endianness = endianness,
+            FileSize = size.Total,
+            DataOffset = new Offset<ResData>(size.DataOffset),
+            MarkerOffset = new Offset<ResContainer>(size.MarkerOffset),
+            ExtOffset = new Offset<ResContainer>(size.ExtOffset),
+            StringTableOffset = new Offset<ResStringTable>(size.StringTableOffset),
         };
 
         var data = resAudioMetadata->DataOffset.GetPointer(resAudioMetadata);
-        *data = new AudioMetadataData {
+        *data = new ResData {
             SectionSize = size.DataSize - 0x8,
             NameOffset = metadata.Data.Name is null ? 0 : strings[metadata.Data.Name],
             SampleCount = metadata.Data.SampleCount,
@@ -61,14 +64,15 @@ public static class AmtaSerializer
         }
 
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
-        *marker = new AudioMetadataMarker {
+        *marker = new ResContainer {
+            Magic = ResAudioMetadata.AmtaAttributesMagic,
             SectionSize = size.MarkerSize - 0x8,
-            NumEntries = metadata.Marker.Count
+            NumEntries = metadata.Markers.Count
         };
 
-        var markerEntries = (AudioMetadataMarkerEntry*)++marker;
-        foreach (var entry in metadata.Marker) {
-            *markerEntries = new AudioMetadataMarkerEntry {
+        var markerEntries = (ResMarker*)++marker;
+        foreach (var entry in metadata.Markers) {
+            *markerEntries = new ResMarker {
                 Id = entry.Id,
                 NameOffset = entry.Name is null ? 0 : strings[entry.Name],
                 StartPos = entry.StartPos,
@@ -79,20 +83,20 @@ public static class AmtaSerializer
         }
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
-        *ext = new AudioMetadataExt {
+        *ext = new ResContainer {
             SectionSize = size.ExtSize - 0x8,
-            NumEntries = metadata.Ext.Count
+            NumEntries = metadata.Attributes.Count
         };
 
-        var extEntries = (AudioMetadataExtEntry*)++ext;
-        foreach (var entry in metadata.Ext) {
-            extEntries->Unknown[0] = entry.Unknown1;
-            extEntries->Unknown[1] = entry.Unknown2;
+        var extEntries = (ResAttribute*)++ext;
+        foreach (var entry in metadata.Attributes) {
+            extEntries->KeyOffset = entry.Key is null ? 0 : strings[entry.Key];
+            extEntries->Value = entry.Value;
             extEntries++;
         }
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
-        *stringTable = new AudioMetadataStringTable();
+        *stringTable = new ResStringTable();
 
         var stringTablePtr = (byte*)++stringTable;
 
@@ -107,23 +111,23 @@ public static class AmtaSerializer
         SwapEndiannessFromSystem(resAudioMetadata);
     }
 
-    public static unsafe BarsMetadata Deserialize(void* resAudioMetadata, out Endianness endianness)
+    public static IAudioMetadata Deserialize(void* resAudioMetadata, out Endianness endianness)
     {
-        var audioMetadata = (AudioMetadata*)resAudioMetadata;
-        endianness = EndianUtils.GetTrueEndianness(audioMetadata->Header.Endianness);
+        var audioMetadata = (ResAudioMetadata*)resAudioMetadata;
+        endianness = EndianUtils.GetTrueEndianness(audioMetadata->Endianness);
 
         SwapEndianness(audioMetadata);
 
-        return new BarsMetadata {
+        return new AalAudioMetadata {
             Data = Deserialize(audioMetadata->DataOffset.GetPointer(resAudioMetadata), audioMetadata),
-            Marker = Deserialize(audioMetadata->MarkerOffset.GetPointer(resAudioMetadata), audioMetadata),
-            Ext = Deserialize(audioMetadata->ExtOffset.GetPointer(resAudioMetadata)),
+            Markers = DeserializeMarkers(audioMetadata->MarkerOffset.GetPointer(resAudioMetadata), audioMetadata),
+            Attributes = DeserializeAttributes(audioMetadata->ExtOffset.GetPointer(resAudioMetadata), audioMetadata),
         };
     }
 
-    public static unsafe BarsMetadataData Deserialize(AudioMetadataData* resData, AudioMetadata* metadata)
+    public static unsafe AalOptionalMetadata Deserialize(ResData* resData, ResAudioMetadata* metadata)
     {
-        return new BarsMetadataData {
+        return new AalOptionalMetadata {
             Name = metadata->Name.ToString(),
             SampleCount = resData->SampleCount,
             Type = resData->Type,
@@ -140,14 +144,14 @@ public static class AmtaSerializer
         };
     }
 
-    public static unsafe BarsMetadataMarker Deserialize(AudioMetadataMarker* resMarker, AudioMetadata* metadata)
+    public static unsafe List<AalMarker> DeserializeMarkers(ResContainer* resMarker, ResAudioMetadata* metadata)
     {
-        var marker = new BarsMetadataMarker(resMarker->NumEntries);
-        var entries = (AudioMetadataMarkerEntry*)(resMarker + 1);
+        var marker = new List<AalMarker>(resMarker->NumEntries);
+        var entries = (ResMarker*)(resMarker + 1);
 
         for (int i = 0; i < resMarker->NumEntries; i++) {
             var entry = entries[i];
-            marker.Add(new BarsMetadataMarkerEntry {
+            marker.Add(new AalMarker {
                 Id = entry.Id,
                 Name = metadata->GetString(entry.NameOffset).ToString(),
                 StartPos = entry.StartPos,
@@ -158,94 +162,94 @@ public static class AmtaSerializer
         return marker;
     }
 
-    public static unsafe BarsMetadataExt Deserialize(AudioMetadataExt* resExt)
+    public static unsafe List<AalAttribute> DeserializeAttributes(ResContainer* resExt, ResAudioMetadata* metadata)
     {
-        var ext = new BarsMetadataExt(resExt->NumEntries);
-        var entries = (AudioMetadataExtEntry*)(resExt + 1);
+        var ext = new List<AalAttribute>(resExt->NumEntries);
+        var entries = (ResAttribute*)(resExt + 1);
 
         for (int i = 0; i < resExt->NumEntries; i++) {
             var entry = entries[i];
-            ext.Add(new BarsMetadataExtEntry {
-                Unknown1 = entry.Unknown[0],
-                Unknown2 = entry.Unknown[1]
+            ext.Add(new AalAttribute {
+                Key = metadata->GetString(entry.KeyOffset).ToString(),
+                Value = entry.Value
             });
         }
 
         return ext;
     }
 
-    public static unsafe void SwapEndianness(AudioMetadata* resAudioMetadata)
+    public static unsafe void SwapEndianness(ResAudioMetadata* resAudioMetadata)
     {
-        if (!EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
+        if (!EndianUtils.ShouldSwap(resAudioMetadata->Endianness)) {
             return;
         }
 
-        AudioMetadata.Swap(resAudioMetadata);
-        AudioMetadataData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
+        ResAudioMetadata.Swap(resAudioMetadata);
+        ResData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
 
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
-        var markerEntries = (AudioMetadataMarkerEntry*)(marker + 1);
-        AudioMetadataMarker.Swap(marker);
+        var markerEntries = (ResMarker*)(marker + 1);
+        ResContainer.Swap(marker);
 
         for (int i = 0; i < marker->NumEntries; i++) {
-            AudioMetadataMarkerEntry.Swap(markerEntries++);
+            ResMarker.Swap(markerEntries++);
         }
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
-        var extEntries = (AudioMetadataExtEntry*)(ext + 1);
-        AudioMetadataExt.Swap(ext);
+        var extEntries = (ResAttribute*)(ext + 1);
+        ResContainer.Swap(ext);
 
         for (int i = 0; i < ext->NumEntries; i++) {
-            AudioMetadataExtEntry.Swap(extEntries++);
+            ResAttribute.Swap(extEntries++);
         }
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
-        AudioMetadataStringTable.Swap(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
+        ResStringTable.Swap(stringTable, resAudioMetadata->FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
     }
 
-    public static unsafe void SwapEndiannessFromSystem(AudioMetadata* resAudioMetadata)
+    public static unsafe void SwapEndiannessFromSystem(ResAudioMetadata* resAudioMetadata)
     {
-        if (EndianUtils.ShouldSwap(resAudioMetadata->Header.Endianness)) {
+        if (EndianUtils.ShouldSwap(resAudioMetadata->Endianness)) {
             EndianUtils.Swap((ushort*)resAudioMetadata + 2);
             return;
         }
 
-        AudioMetadataData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
+        ResData.Swap(resAudioMetadata->DataOffset.GetPointer(resAudioMetadata));
 
         var marker = resAudioMetadata->MarkerOffset.GetPointer(resAudioMetadata);
-        var markerEntries = (AudioMetadataMarkerEntry*)(marker + 1);
+        var markerEntries = (ResMarker*)(marker + 1);
 
         for (int i = 0; i < marker->NumEntries; i++) {
-            AudioMetadataMarkerEntry.Swap(markerEntries++);
+            ResMarker.Swap(markerEntries++);
         }
 
-        AudioMetadataMarker.Swap(marker);
+        ResContainer.Swap(marker);
 
         var ext = resAudioMetadata->ExtOffset.GetPointer(resAudioMetadata);
-        var extEntries = (AudioMetadataExtEntry*)(ext + 1);
+        var extEntries = (ResAttribute*)(ext + 1);
 
         for (int i = 0; i < ext->NumEntries; i++) {
-            AudioMetadataExtEntry.Swap(extEntries++);
+            ResAttribute.Swap(extEntries++);
         }
 
-        AudioMetadataExt.Swap(ext);
+        ResContainer.Swap(ext);
 
         var stringTable = resAudioMetadata->StringTableOffset.GetPointer(resAudioMetadata);
-        AudioMetadataStringTable.SwapFromSystem(stringTable, resAudioMetadata->Header.FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
+        ResStringTable.SwapFromSystem(stringTable, resAudioMetadata->FileSize - (int)((byte*)stringTable - (byte*)resAudioMetadata));
 
-        AudioMetadata.Swap(resAudioMetadata);
+        ResAudioMetadata.Swap(resAudioMetadata);
     }
 
-    public static IEnumerable<string?> GetStrings(BarsMetadata metadata)
+    public static IEnumerable<string?> GetStrings(AalAudioMetadata metadata)
     {
         yield return metadata.Data.Name;
 
-        foreach (var marker in metadata.Marker) {
+        foreach (var marker in metadata.Markers) {
             yield return marker.Name;
         }
     }
 
-    public static FrozenDictionary<string, int> BuildStringTable(BarsMetadata metadata, out bool includeNullString)
+    public static FrozenDictionary<string, int> BuildStringTable(AalAudioMetadata metadata, out bool includeNullString)
     {
         int rollingOffset = 0;
         Dictionary<string, int> stringTable = new();

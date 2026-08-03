@@ -1,9 +1,9 @@
 using Entish.Attributes;
 
-namespace AalSharp.Bars.Data;
+namespace AalSharp.Amta.Data;
 
 [Swappable]
-public partial struct AudioMetadataMarkerEntry
+public partial struct ResMarker
 {
     public uint Id;
     public int NameOffset;

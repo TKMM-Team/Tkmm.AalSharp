@@ -1,20 +1,20 @@
 using Entish;
 using Entish.Attributes;
 
-namespace AalSharp.Bars.Data;
+namespace AalSharp.Amta.Data;
 
-public struct AudioMetadataStringTable()
+public struct ResStringTable()
 {
     public const uint AmtaStringTableMagic = 1196577875;
 
     [NeverSwap]
     public readonly uint Magic = AmtaStringTableMagic;
     
-    public static unsafe void Swap(AudioMetadataStringTable* value, int size)
+    public static unsafe void Swap(ResStringTable* value, int size)
     {
-        var ptr = (byte*)value + sizeof(AudioMetadataStringTable);
+        var ptr = (byte*)value + sizeof(ResStringTable);
 
-        for (int i = sizeof(AudioMetadataStringTable); i + 0x4 < size;) {
+        for (int i = sizeof(ResStringTable); i + 0x4 < size;) {
             var len = (int*)ptr;
             EndianUtils.Swap(len);
 
@@ -24,11 +24,11 @@ public struct AudioMetadataStringTable()
         }
     }
     
-    public static unsafe void SwapFromSystem(AudioMetadataStringTable* value, int size)
+    public static unsafe void SwapFromSystem(ResStringTable* value, int size)
     {
-        var ptr = (byte*)value + sizeof(AudioMetadataStringTable);
+        var ptr = (byte*)value + sizeof(ResStringTable);
 
-        for (int i = sizeof(AudioMetadataStringTable); i + 0x4 < size;) {
+        for (int i = sizeof(ResStringTable); i + 0x4 < size;) {
             var len = (int*)ptr;
             var stringSize = 0x4 + *len;
             
