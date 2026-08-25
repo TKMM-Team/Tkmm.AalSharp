@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AalSharp.Amta4\AalSharp.Amta4.csproj" />
+    <ProjectReference Include="..\..\src\AalSharp.Amta4\AalSharp.Amta4.csproj" />
     <ProjectReference Include="..\..\src\AalSharp.Bars\AalSharp.Bars.csproj" />
   </ItemGroup>
 

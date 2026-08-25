@@ -8,4 +8,8 @@
     <RootNamespace>AalSharp.Amta</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AalSharp.Amta\AalSharp.Amta.csproj" />
+  </ItemGroup>
+
 </Project>

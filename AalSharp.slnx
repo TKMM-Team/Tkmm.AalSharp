@@ -6,9 +6,9 @@
   <Folder Name="/Tests/">
     <Project Path="tests/AalSharp.Bars.Tests/AalSharp.Bars.Tests.csproj" />
   </Folder>
-  <Project Path="AalSharp.Amta/AalSharp.Amta.csproj" />
-  <Project Path="AalSharp.Amta4/AalSharp.Amta4.csproj" />
-  <Project Path="AalSharp.Amta5/AalSharp.Amta5.csproj" />
-  <Project Path="src/AalSharp.Bars/AalSharp.Bars.csproj" />
   <Project Path="src/AalSharp/AalSharp.csproj" />
+  <Project Path="src/AalSharp.Amta/AalSharp.Amta.csproj" />
+  <Project Path="src/AalSharp.Bars/AalSharp.Bars.csproj" />
+  <Project Path="src/AalSharp.Amta4/AalSharp.Amta4.csproj" />
+  <Project Path="src/AalSharp.Amta5/AalSharp.Amta5.csproj" />
 </Solution>
