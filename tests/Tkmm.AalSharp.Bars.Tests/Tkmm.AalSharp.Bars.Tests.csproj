@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Tkmm.AalSharp.Amta4\Tkmm.AalSharp.Amta4.csproj" />
     <ProjectReference Include="..\..\src\Tkmm.AalSharp.Bars\Tkmm.AalSharp.Bars.csproj"/>
   </ItemGroup>
 

@@ -1,8 +1,7 @@
-using Tkmm.AalSharp.Amta.IO;
+using BenchmarkDotNet.Attributes;
 using Tkmm.AalSharp.Bars;
 using Tkmm.AalSharp.Bars.IO;
 using Tkmm.AalSharp.Bars.IO.Data;
-using BenchmarkDotNet.Attributes;
 
 namespace Tkmm.AalSharp.Benchmarks;
 
@@ -16,13 +15,13 @@ public class BarsBenchmarks
 
     public BarsBenchmarks()
     {
-        _file = AudioResource.FromBinary<AmtaSerializer>(_buffer);
+        _file = AudioResource.FromBinary(_buffer);
     }
 
     [Benchmark]
     public void Read()
     {
-        _ = AudioResource.FromBinary<AmtaSerializer>(_buffer);
+        _ = AudioResource.FromBinary(_buffer);
     }
 
     [Benchmark]

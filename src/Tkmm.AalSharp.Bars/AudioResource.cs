@@ -1,21 +1,18 @@
-using Tkmm.AalSharp.Amta.IO;
+using Entish;
 using Tkmm.AalSharp.Bars.IO;
 using Tkmm.AalSharp.Hashing;
-using Entish;
 
 namespace Tkmm.AalSharp.Bars;
 
 public class AudioResource : Dictionary<uint, AudioResourceAsset>
 {
-    public static AudioResource FromBinary<TAmtaSerializer>(in ReadOnlySpan<byte> data)
-        where TAmtaSerializer : IAmtaSerializer
-        => FromBinary<TAmtaSerializer>(data, out _);
+    public static AudioResource FromBinary(in ReadOnlySpan<byte> data)
+        => FromBinary(data, out _);
 
-    public static unsafe AudioResource FromBinary<TAmtaSerializer>(in ReadOnlySpan<byte> data, out Endianness endianness)
-        where TAmtaSerializer : IAmtaSerializer
+    public static unsafe AudioResource FromBinary(in ReadOnlySpan<byte> data, out Endianness endianness)
     {
         fixed (byte* ptr = data) {
-            return BarsSerializer.Deserialize<TAmtaSerializer>(ptr, out endianness);
+            return BarsSerializer.Deserialize(ptr, out endianness);
         }
     }
 

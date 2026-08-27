@@ -7,8 +7,5 @@
     <Project Path="tests/Tkmm.AalSharp.Bars.Tests/Tkmm.AalSharp.Bars.Tests.csproj" />
   </Folder>
   <Project Path="src/Tkmm.AalSharp/Tkmm.AalSharp.csproj" />
-  <Project Path="src/Tkmm.AalSharp.Amta/Tkmm.AalSharp.Amta.csproj" />
   <Project Path="src/Tkmm.AalSharp.Bars/Tkmm.AalSharp.Bars.csproj" />
-  <Project Path="src/Tkmm.AalSharp.Amta4/Tkmm.AalSharp.Amta4.csproj" />
-  <Project Path="src/Tkmm.AalSharp.Amta5/Tkmm.AalSharp.Amta5.csproj" />
 </Solution>

@@ -1,10 +1,9 @@
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
-using Tkmm.AalSharp.Amta.IO;
+using Entish;
 using Tkmm.AalSharp.Bars.Data;
 using Tkmm.AalSharp.Bars.IO.Data;
 using Tkmm.AalSharp.Helpers;
-using Entish;
 
 namespace Tkmm.AalSharp.Bars.IO;
 
@@ -51,12 +50,11 @@ public static class BarsSerializer
                 AssetOffset = new Offset<byte>(asset.Offset),
             };
 
-            var metadataSize = entry.Metadata.GetResSize();
-            entry.Metadata.GetSerializer().Serialize(entry.Metadata, metadata, metadataSize, endianness);
+            Marshal.Copy(entry.Metadata, 0, (IntPtr)metadata, entry.Metadata.Length);
 
             resources++;
-            metadata += metadataSize.Total;
-            size.MetadataOffset += metadataSize.Total;
+            metadata += entry.Metadata.Length;
+            size.MetadataOffset += entry.Metadata.Length;
 
             size.AssetOffset = size.AssetOffset.AlignUp(asset.Alignment);
             if (asset.Data is null || asset.Offset != size.AssetOffset) {
@@ -70,8 +68,7 @@ public static class BarsSerializer
         SwapEndiannessFromSystem(resAudioResource);
     }
 
-    public static unsafe AudioResource Deserialize<TAmtaSerializer>(void* resAudioResource, out Endianness endianness)
-        where TAmtaSerializer : IAmtaSerializer
+    public static unsafe AudioResource Deserialize(void* resAudioResource, out Endianness endianness)
     {
         AudioResource bars = [];
 
@@ -90,8 +87,10 @@ public static class BarsSerializer
             var metadata = resource.AmtaOffset.GetPointer(resAudioResource);
             var asset = resource.AssetOffset.GetPointer(resAudioResource);
 
+            var metadataBufferSize = ((ResAudioMetadataHeader*)metadata)->FileSize;
+
             bars[hash] = new AudioResourceAsset {
-                Metadata = TAmtaSerializer.Deserialize(metadata, out _),
+                Metadata = [.. new ReadOnlySpan<byte>(metadata, metadataBufferSize)],
                 Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray()
             };
         }

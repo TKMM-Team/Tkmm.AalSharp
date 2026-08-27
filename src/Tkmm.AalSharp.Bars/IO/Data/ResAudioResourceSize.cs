@@ -28,7 +28,7 @@ public unsafe struct ResAudioResourceSize : IResourceSize
         ResourcesOffset = HeaderSize + HashesSize;
         ResourcesSize = sizeof(ResAssetOffset) * bars.Count;
         MetadataOffset = ResourcesOffset + ResourcesSize;
-        MetadataSize = bars.Values.Sum(static entry => entry.Metadata.GetResSize().Total);
+        MetadataSize = bars.Values.Sum(static entry => entry.Metadata.Length);
         var firstAssetOffset = MetadataOffset + MetadataSize;
         AssetOffset = firstAssetOffset;
 
