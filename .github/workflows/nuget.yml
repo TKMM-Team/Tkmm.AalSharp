@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: AalSharp
-          - name: AalSharp.Bars
+          - name: Tkmm.AalSharp
+          - name: Tkmm.AalSharp.Bars
             
     steps:
       - name: Checkout

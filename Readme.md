@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/EPD-Libraries/AalSharp/refs/heads/master/resources/Icon.png" width="100vh">
+  <img src="https://raw.githubusercontent.com/TKMM-Team/Tkmm.AalSharp/refs/heads/master/resources/Icon.png" width="100vh">
   <h1>- &nbsp; AAL# &nbsp; -</h1>
 </div>
 
@@ -20,7 +20,7 @@ Supports BARS **v101** and AMTA **v4**.
 ### Reading a BARS File
 
 ```cs
-using AalSharp.Bars;
+using Tkmm.AalSharp.Bars;
 
 byte[] data = File.ReadAllBytes("path/to/file.bars");
 var bars = BarsFile.FromBinary(data, out var endianness);
@@ -29,7 +29,7 @@ var bars = BarsFile.FromBinary(data, out var endianness);
 ### Writing a BARS File
 
 ```cs
-using AalSharp.Bars;
+using Tkmm.AalSharp.Bars;
 
 // Write to a stream
 using FileStream fs = File.Create("path/to/output.bars");
@@ -40,7 +40,7 @@ byte[] data = bars.ToBinary(Endianness.Little, endianness: Entish.Endianness.Lit
 ```
 
 > [!NOTE]
-> Writing to a pointer or `Span<byte>` can be done via the [AalSharp.Bars.IO.BarsSerializer](https://github.com/EPD-Libraries/AalSharp/blob/master/src/AalSharp.Bars/IO/BarsSerializer.cs) class
+> Writing to a pointer or `Span<byte>` can be done via the [Tkmm.AalSharp.Bars.IO.BarsSerializer](https://github.com/TKMM-Team/Tkmm.AalSharp/blob/master/src/Tkmm.AalSharp.Bars/IO/BarsSerializer.cs) class
 
 ## Benchmarks
 
@@ -56,25 +56,25 @@ byte[] data = bars.ToBinary(Endianness.Little, endianness: Entish.Endianness.Lit
 
 ### Install
 
-#### AalSharp
+#### Tkmm.AalSharp
 
-[![NuGet](https://img.shields.io/nuget/v/AalSharp.svg?style=for-the-badge&labelColor=2a2c33)](https://www.nuget.org/packages/AalSharp) [![NuGet](https://img.shields.io/nuget/dt/AalSharp.svg?style=for-the-badge&labelColor=2a2c33&color=32a852)](https://www.nuget.org/packages/AalSharp)
+[![NuGet](https://img.shields.io/nuget/v/Tkmm.AalSharp.svg?style=for-the-badge&labelColor=2a2c33)](https://www.nuget.org/packages/Tkmm.AalSharp) [![NuGet](https://img.shields.io/nuget/dt/Tkmm.AalSharp.svg?style=for-the-badge&labelColor=2a2c33&color=32a852)](https://www.nuget.org/packages/Tkmm.AalSharp)
 
-#### AalSharp.Bars
+#### Tkmm.AalSharp.Bars
 
-[![NuGet](https://img.shields.io/nuget/v/AalSharp.Bars.svg?style=for-the-badge&labelColor=2a2c33)](https://www.nuget.org/packages/AalSharp.Bars) [![NuGet](https://img.shields.io/nuget/dt/AalSharp.Bars.svg?style=for-the-badge&labelColor=2a2c33&color=32a852)](https://www.nuget.org/packages/AalSharp.Bars)
+[![NuGet](https://img.shields.io/nuget/v/Tkmm.AalSharp.Bars.svg?style=for-the-badge&labelColor=2a2c33)](https://www.nuget.org/packages/Tkmm.AalSharp.Bars) [![NuGet](https://img.shields.io/nuget/dt/Tkmm.AalSharp.Bars.svg?style=for-the-badge&labelColor=2a2c33&color=32a852)](https://www.nuget.org/packages/Tkmm.AalSharp.Bars)
 
 #### NuGet
 ```powershell
-Install-Package AalSharp
-Install-Package AalSharp.Bars
+Install-Package Tkmm.AalSharp
+Install-Package Tkmm.AalSharp.Bars
 ```
 
 #### Build From Source
 ```batch
-git clone https://github.com/EPD-Libraries/AalSharp.git
-dotnet build AalSharp
-dotnet build AalSharp.Bars
+git clone https://github.com/TKMM-Team/Tkmm.AalSharp.git
+dotnet build Tkmm.AalSharp
+dotnet build Tkmm.AalSharp.Bars
 ```
 
 Special thanks to **[Yannik Marchand (kinnay)](https://reversing.live/)** for the research on the AAL file formats. 
