@@ -10,7 +10,7 @@ public sealed class AudioResourceAsset
     public string? Hint
         => Asset is [_, _, _, _, ..] ? PrimitivesHelper.ToAscii(Unsafe.As<byte, uint>(ref Asset[0])) : null;
 
-    public required IAudioMetadata Metadata { get; set; }
+    public required byte[] Metadata { get; set; }
 
     public required byte[]? Asset { get; set; }
     
