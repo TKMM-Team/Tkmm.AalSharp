@@ -47,5 +47,7 @@ public unsafe struct ResAudioResourceSize : IResourceSize
 
         AssetSize = AssetOffset - firstAssetOffset;
         AssetOffset = firstAssetOffset;
+
+        Total = AssetOffset + AssetSize;
     }
 }
