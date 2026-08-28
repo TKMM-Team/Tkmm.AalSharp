@@ -29,7 +29,7 @@ public unsafe struct ResAudioResourceSize : IResourceSize
         ResourcesSize = sizeof(ResAssetOffset) * bars.Count;
         MetadataOffset = ResourcesOffset + ResourcesSize;
         MetadataSize = bars.Values.Sum(static entry => entry.Metadata.Length);
-        var firstAssetOffset = MetadataOffset + MetadataSize;
+        var firstAssetOffset = (MetadataOffset + MetadataSize).AlignUp(0x40);
         AssetOffset = firstAssetOffset;
 
         foreach (var (_, entry) in bars.OrderBy(static entry => entry.Key)) {
