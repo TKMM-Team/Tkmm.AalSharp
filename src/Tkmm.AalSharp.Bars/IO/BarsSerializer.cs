@@ -27,7 +27,7 @@ public static class BarsSerializer
     public static unsafe void Serialize(AudioResource bars, ResAudioResource* resAudioResource, ResAudioResourceSize size, Endianness endianness = Endianness.Little)
     {
         *resAudioResource = new ResAudioResource {
-            FileSize = (uint)size.Total,
+            FileSize = size.Total,
             AssetCount = bars.Count,
             Endianness = endianness
         };
@@ -88,10 +88,11 @@ public static class BarsSerializer
             var asset = resource.AssetOffset.GetPointer(resAudioResource);
 
             var metadataBufferSize = ((ResAudioMetadataHeader*)metadata)->FileSize;
+            var assetSize = GetResourceSize(audioResources, resources, i);
 
             bars[hash] = new AudioResourceAsset {
                 Metadata = [.. new ReadOnlySpan<byte>(metadata, metadataBufferSize)],
-                Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, ResourceHelper.GetAssetSize(asset)).ToArray()
+                Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, assetSize).ToArray()
             };
         }
 
@@ -144,5 +145,53 @@ public static class BarsSerializer
         }
 
         ResAudioResource.Swap(resAudioResource);
+    }
+
+    private static unsafe int GetResourceSize(ResAudioResource* resAudioResource, ResAssetOffset* resAssetOffsets, int idx)
+    {
+        var res = resAssetOffsets[idx];
+
+        if (idx == 0) {
+            goto NextOrEnd;
+        }
+
+        var prev = resAssetOffsets[idx - 1];
+
+        // When the previous offset is larger the
+        // target offset refers to a previous file
+        if (prev.AssetOffset.Value > res.AssetOffset.Value) {
+            // Locate the first occurrence of the offset
+            for (int i = 0; i < idx; i++) {
+                var firstOccurrence = resAssetOffsets[i];
+                if (firstOccurrence.AssetOffset.Value == res.AssetOffset.Value) {
+                    res = firstOccurrence;
+                    idx = i;
+                    goto NextOrEnd;
+                }
+            }
+
+            throw new InvalidDataException(
+                $"Could not locate an earlier occurrence of the offset 0x{res.AssetOffset.Value:x8} @ [{idx}]");
+        }
+
+    NextOrEnd:
+        bool isEnd;
+        
+        // Assets are written in order, so we can always
+        // skip to the offset of the next written asset (or EOF) 
+        while (!(isEnd = ++idx >= resAudioResource->AssetCount) &&
+               res.AssetOffset.Value >= resAssetOffsets[idx].AssetOffset.Value) {
+        }
+
+        var nextOrEnd = isEnd
+            ? resAudioResource->FileSize
+            : resAssetOffsets[idx].AssetOffset.Value;
+
+        if (res.AssetOffset.Value > nextOrEnd) {
+            throw new InvalidDataException(
+                $"Asset offset {res.AssetOffset.Value:x8} exceeds end of file");
+        }
+
+        return nextOrEnd - res.AssetOffset.Value;
     }
 }

@@ -15,7 +15,7 @@ public unsafe partial struct ResAudioResource() : IMemoryResource<ResAudioResour
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     [NeverSwap]
     public readonly uint Magic = AudioResourceMagic;
-    public uint FileSize;
+    public int FileSize;
     public Endianness Endianness;
     public ushort Version = AudioResourceVersion;
     public int AssetCount;
