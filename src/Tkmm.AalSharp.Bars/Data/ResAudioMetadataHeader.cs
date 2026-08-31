@@ -1,11 +1,11 @@
+using System.Runtime.InteropServices;
 using Entish;
 
 namespace Tkmm.AalSharp.Bars.Data;
 
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
 public readonly struct ResAudioMetadataHeader
 {
-    public const uint AmtaMagic = 0x41544D41;
-
     public readonly uint Magic;
     public readonly Endianness Endianness;
     public readonly ushort Version;
