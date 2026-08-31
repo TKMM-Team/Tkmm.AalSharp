@@ -12,6 +12,8 @@ public sealed class AudioResourceAsset
     public required byte[] Metadata { get; set; }
 
     public required byte[]? Asset { get; set; }
+
+    public bool IsPublic { get; set; }
     
     public int GetAlignment()
     {

@@ -80,6 +80,7 @@ public static class BarsSerializer
         var resCount = audioResources->AssetCount;
         var hashes = (uint*)((byte*)audioResources + sizeof(ResAudioResource));
         var resources = (ResAssetOffset*)((byte*)hashes + sizeof(uint) * resCount);
+        var publicHashes = audioResources->GetPublicHashes();
 
         for (int i = 0; i < resCount; i++) {
             var hash = hashes[i];
@@ -92,7 +93,8 @@ public static class BarsSerializer
 
             bars[hash] = new AudioResourceAsset {
                 Metadata = [.. new ReadOnlySpan<byte>(metadata, metadataBufferSize)],
-                Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, assetSize).ToArray()
+                Asset = asset is null ? null : new ReadOnlySpan<byte>(asset, assetSize).ToArray(),
+                IsPublic = publicHashes.Contains(hash)
             };
         }
 

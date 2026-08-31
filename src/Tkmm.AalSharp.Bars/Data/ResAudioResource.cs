@@ -10,7 +10,7 @@ namespace Tkmm.AalSharp.Bars.Data;
 public unsafe partial struct ResAudioResource() : IMemoryResource<ResAudioResource>
 {
     public const uint AudioResourceMagic = 0x53524142;
-    public const int AudioResourceVersion = 0x0101;
+    public const int AudioResourceVersion = 0x0201;
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     [NeverSwap]
@@ -63,6 +63,18 @@ public unsafe partial struct ResAudioResource() : IMemoryResource<ResAudioResour
             }
 
             return ref Unsafe.NullRef<ResAssetOffset>();
+        }
+    }
+
+    public ReadOnlySpan<uint> GetPublicHashes()
+    {
+        fixed (ResAudioResource* resAudioResource = &this) {
+            var ptr = (byte*)resAudioResource + sizeof(uint) * AssetCount + sizeof(ResAssetOffset) * AssetCount;
+            var publicHashCount = *(int*)ptr;
+            ptr += sizeof(uint);
+            var hashes = new Span<uint>(ptr, publicHashCount);
+            hashes.Sort();
+            return hashes;
         }
     }
 
