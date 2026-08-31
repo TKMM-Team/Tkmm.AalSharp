@@ -13,7 +13,7 @@ var outputFile = args[0] + ".out.bars";
         File.WriteAllBytes(Path.Combine(output, $"{hash:X8}.amta"), entry.Metadata);
 
         if (entry.Asset is not null) {
-            File.WriteAllBytes(Path.Combine(output, $"{hash:X8}.b{entry.Hint?.ToLower() ?? "in"}"), entry.Asset);
+            File.WriteAllBytes(Path.Combine(output, $"{hash:X8}.{entry.Hint?.ToLower() ?? "bin"}"), entry.Asset);
         }
     }
 
@@ -31,7 +31,7 @@ var outputFile = args[0] + ".out.bars";
         File.WriteAllBytes(Path.Combine(output, $"{hash:X8}.amta"), entry.Metadata);
 
         if (entry.Asset is not null) {
-            File.WriteAllBytes(Path.Combine(output, $"{hash}.b{entry.Hint?.ToLower() ?? "in"}"), entry.Asset);
+            File.WriteAllBytes(Path.Combine(output, $"{hash:X8}.{entry.Hint?.ToLower() ?? "bin"}"), entry.Asset);
         }
     }
 }
