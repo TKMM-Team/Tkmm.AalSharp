@@ -40,7 +40,10 @@ public static class BarsSerializer
 
         var resources = (ResAssetOffset*)hashes;
         var metadata = (byte*)resAudioResource + size.MetadataOffset;
+        
         var publicHashCount = resAudioResource->PublicHashesCount;
+        *publicHashCount = 0;
+        
         var publicHashes = (uint*)publicHashCount + 1;
 
         foreach (var (hash, entry) in bars.OrderBy(static entry => entry.Key)) {
