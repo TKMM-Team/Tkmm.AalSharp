@@ -40,10 +40,17 @@ public static class BarsSerializer
 
         var resources = (ResAssetOffset*)hashes;
         var metadata = (byte*)resAudioResource + size.MetadataOffset;
+        var publicHashCount = resAudioResource->PublicHashesCount;
+        var publicHashes = (uint*)publicHashCount + 1;
 
-        foreach (var (_, entry) in bars.OrderBy(static entry => entry.Key)) {
+        foreach (var (hash, entry) in bars.OrderBy(static entry => entry.Key)) {
             var assetHash = XxHash64.HashToUInt64(entry.Asset);
             var asset = size.Assets[assetHash];
+
+            if (entry.IsPublic) {
+                publicHashes[*publicHashCount] = hash; 
+                (*publicHashCount)++;
+            }
 
             *resources = new ResAssetOffset {
                 AmtaOffset = new Offset<byte>(size.MetadataOffset),
@@ -88,8 +95,11 @@ public static class BarsSerializer
             var metadata = resource.AmtaOffset.GetPointer(resAudioResource);
             var asset = resource.AssetOffset.GetPointer(resAudioResource);
 
+            Console.WriteLine((int)(metadata - (byte*)resAudioResource));
+
+            var amta = (ResAudioMetadataHeader*)metadata;
             var metadataBufferSize = ((ResAudioMetadataHeader*)metadata)->FileSize;
-            var assetSize = GetResourceSize(audioResources, resources, i);
+            var assetSize = resource.AssetOffset.Value > 0 ? GetResourceSize(audioResources, resources, i) : 0;
 
             bars[hash] = new AudioResourceAsset {
                 Metadata = [.. new ReadOnlySpan<byte>(metadata, metadataBufferSize)],

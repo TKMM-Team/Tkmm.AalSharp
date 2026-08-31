@@ -10,15 +10,25 @@ namespace Tkmm.AalSharp.Bars.Data;
 public unsafe partial struct ResAudioResource() : IMemoryResource<ResAudioResource>
 {
     public const uint AudioResourceMagic = 0x53524142;
-    public const int AudioResourceVersion = 0x0201;
+    public const int AudioResourceVersion = 0x0102;
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     [NeverSwap]
     public readonly uint Magic = AudioResourceMagic;
+
     public int FileSize;
     public Endianness Endianness;
     public ushort Version = AudioResourceVersion;
     public int AssetCount;
+
+    public int* PublicHashesCount {
+        get {
+            fixed (ResAudioResource* resAudioResource = &this) {
+                var ptr = (byte*)(resAudioResource + 1) + sizeof(uint) * AssetCount + sizeof(ResAssetOffset) * AssetCount;
+                return (int*)ptr;
+            }
+        }
+    }
 
     public ref ResAssetOffset this[int index] {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -68,14 +78,10 @@ public unsafe partial struct ResAudioResource() : IMemoryResource<ResAudioResour
 
     public ReadOnlySpan<uint> GetPublicHashes()
     {
-        fixed (ResAudioResource* resAudioResource = &this) {
-            var ptr = (byte*)resAudioResource + sizeof(uint) * AssetCount + sizeof(ResAssetOffset) * AssetCount;
-            var publicHashCount = *(int*)ptr;
-            ptr += sizeof(uint);
-            var hashes = new Span<uint>(ptr, publicHashCount);
-            hashes.Sort();
-            return hashes;
-        }
+        var publicHashes = PublicHashesCount + 1;
+        var hashes = new Span<uint>(publicHashes, *PublicHashesCount);
+        hashes.Sort();
+        return hashes;
     }
 
     public static IEnumerable<Exception> GetErrors(ResAudioResource value)

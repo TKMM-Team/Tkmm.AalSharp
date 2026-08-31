@@ -12,6 +12,8 @@ public unsafe struct ResAudioResourceSize : IResourceSize
     public readonly int HashesSize;
     public readonly int ResourcesOffset;
     public readonly int ResourcesSize;
+    public readonly int PublicHashesOffset;
+    public readonly int PublicHashesSize;
     public int MetadataOffset;
     public readonly int MetadataSize;
     public int AssetOffset;
@@ -27,7 +29,9 @@ public unsafe struct ResAudioResourceSize : IResourceSize
         HashesSize = sizeof(uint) * bars.Count;
         ResourcesOffset = HeaderSize + HashesSize;
         ResourcesSize = sizeof(ResAssetOffset) * bars.Count;
-        MetadataOffset = ResourcesOffset + ResourcesSize;
+        PublicHashesOffset = ResourcesOffset + ResourcesSize;
+        PublicHashesSize = sizeof(int) + bars.Values.Count(asset => asset.IsPublic) * sizeof(uint);
+        MetadataOffset = PublicHashesOffset + PublicHashesSize;
         MetadataSize = bars.Values.Sum(static entry => entry.Metadata.Length);
         var firstAssetOffset = (MetadataOffset + MetadataSize).AlignUp(0x40);
         AssetOffset = firstAssetOffset;
